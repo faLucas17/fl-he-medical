@@ -90,6 +90,7 @@ def simuler(donnees, schema, nb_rounds=NB_ROUNDS, epoques=EPOQUES_LOCALES, grain
                        t_dechiffrement=t_dechiffrement,
                        octets_par_message=schema.taille_octets(messages[0]))
         historique.append(mesures)
+        print(f"  round {numero}/{nb_rounds} terminé", flush=True)
     return historique, nb_poids
 
 
@@ -124,13 +125,19 @@ def afficher(historique, nom_jeu, schema, nb_poids):
 
 
 if __name__ == "__main__":
-    jeux = sys.argv[1:] or ["pima", "heart_uci", "ckd"]
-    for nom_jeu in jeux:
-        donnees = charger(nom_jeu)
-        schema = SansChiffrement()
-        resultats, nb = simuler(donnees, schema)
-        afficher(resultats, nom_jeu, schema, nb)
+    # Utilisation : python -m src.federe <jeu> <schéma>
+    #   jeu    : pima, heart_uci, ckd
+    #   schéma : sans, ckks, bfv, paillier
+    from src.chiffrement import SCHEMAS
+    SCHEMAS["sans"] = SansChiffrement
+    nom_jeu = sys.argv[1] if len(sys.argv) > 1 else "pima"
+    nom_schema = sys.argv[2] if len(sys.argv) > 2 else "sans"
+    donnees = charger(nom_jeu)
+    schema = SCHEMAS[nom_schema]()
+    resultats, nb = simuler(donnees, schema)
+    afficher(resultats, nom_jeu, schema, nb)
+    if nom_schema == "sans":
         centralise = reference_centralisee(donnees)
         print(f"Référence centralisée : accuracy {centralise['accuracy']:.3f} | "
               f"F1 {centralise['f1']:.3f} | AUC {centralise['auc']:.3f}")
-        print("Résultats enregistrés dans", enregistrer(resultats, nom_jeu, schema))
+    print("Résultats enregistrés dans", enregistrer(resultats, nom_jeu, schema))
