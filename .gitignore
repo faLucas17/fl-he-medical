@@ -1,0 +1,12 @@
+# Environnement virtuel
+.venv/
+
+# Jeux de donnees (trop lourds)
+data/
+
+# Fichiers Python temporaires
+__pycache__/
+*.pyc
+
+# Resultats bruts volumineux
+results/raw/
