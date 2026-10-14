@@ -6,6 +6,9 @@ Les images sont créées dans le dossier figures/ à la racine du projet.
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.ticker
+import logging
+logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)  # évite les avertissements de police
 from matplotlib.patches import FancyBboxPatch, Circle
 from pathlib import Path
 
@@ -251,6 +254,94 @@ def formules():
         plt.close(fig)
 
 
+# ---------------------------------------------------------------------------
+# Graphiques des résultats (lus dans results/*.csv)
+# ---------------------------------------------------------------------------
+RESULTATS = Path(__file__).resolve().parent.parent / "results"
+SCHEMAS_AFFICHES = [("sans_chiffrement", "Sans chiffrement"), ("ckks", "CKKS"), ("bfv", "BFV"), ("paillier", "Paillier")]
+# Référence centralisée affichée par : python -m src.federe <jeu> sans
+REFERENCE_CENTRALISEE = {"pima": 0.760, "heart_uci": 0.811, "ckd": 0.988}
+NOMS_JEUX = {"pima": "Pima (diabète)", "heart_uci": "Heart UCI (cœur)", "ckd": "CKD (rein)"}
+
+
+def _lire(jeu, schema):
+    import pandas as pd
+    fichier = RESULTATS / f"{jeu}_{schema}.csv"
+    return pd.read_csv(fichier) if fichier.exists() else None
+
+
+def _axes_sobres(ax):
+    for cote in ("top", "right"):
+        ax.spines[cote].set_visible(False)
+    ax.spines["left"].set_color(GRIS)
+    ax.spines["bottom"].set_color(GRIS)
+    ax.tick_params(colors=TEXTE, labelsize=12)
+
+
+def _barres(ax, noms, valeurs, etiquettes, titre_axe, log=False):
+    y = list(range(len(noms)))[::-1]
+    couleurs = [GRIS if n == "Sans chiffrement" else VERT for n in noms]
+    ax.barh(y, valeurs, height=0.6, color=couleurs)
+    ax.set_yticks(y)
+    ax.set_yticklabels(noms, fontsize=13)
+    if log:
+        ax.set_xscale("log")
+    ax.set_xlabel(titre_axe, fontsize=12, color=TEXTE)
+    _axes_sobres(ax)
+    ax.grid(axis="x", color="#DDE6E0", lw=0.8)
+    ax.set_axisbelow(True)
+    for yi, v, t in zip(y, valeurs, etiquettes):
+        ax.text(v * 1.35 if log else v + ax.get_xlim()[1] * 0.0 + 12, yi, t, va="center", fontsize=12.5, color=TEXTE, fontweight="bold")
+
+
+def resultats_pima():
+    """Temps de chiffrement et taille des messages sur Pima, pour les 4 configurations."""
+    lignes = [(nom, _lire("pima", code)) for code, nom in SCHEMAS_AFFICHES]
+    lignes = [(nom, d) for nom, d in lignes if d is not None]
+    if not lignes:
+        return
+    noms = [n for n, _ in lignes]
+    temps = [d["t_chiffrement"].mean() for _, d in lignes]
+    tailles = [d["octets_par_message"].mean() / 1024 for _, d in lignes]
+
+    fig, ax = plt.subplots(figsize=(10, 3.6))
+    _barres(ax, noms, temps, [(f"{t:.3f} s" if t < 1 else f"{t:.0f} s").replace(".", ",") for t in temps],
+            "Temps moyen de chiffrement par round, 3 hôpitaux (secondes, échelle logarithmique)", log=True)
+    ax.set_xlim(min(temps) / 2, max(temps) * 12)
+    sauver(fig, "fig6_temps_chiffrement_pima.png")
+
+    fig, ax = plt.subplots(figsize=(10, 3.6))
+    _barres(ax, noms, tailles, [f"{t:.1f} Ko".replace(".", ",") for t in tailles], "Taille d'un message envoyé par un hôpital (Ko)")
+    ax.set_xlim(0, max(tailles) * 1.18)
+    sauver(fig, "fig7_taille_messages_pima.png")
+
+
+def convergence():
+    """Accuracy à chaque round (FL sans chiffrement) et référence centralisée, pour chaque jeu."""
+    jeux = [(j, _lire(j, "sans_chiffrement")) for j in REFERENCE_CENTRALISEE]
+    jeux = [(j, d) for j, d in jeux if d is not None]
+    if not jeux:
+        return
+    fig, axes = plt.subplots(1, len(jeux), figsize=(4 * len(jeux), 3.6), sharey=False)
+    axes = axes if len(jeux) > 1 else [axes]
+    for ax, (jeu, d) in zip(axes, jeux):
+        ax.plot(d["round"], d["accuracy"], color=VERT, lw=2, marker="o", ms=5, label="FL (3 ou 4 hôpitaux)")
+        ref = REFERENCE_CENTRALISEE[jeu]
+        ax.axhline(ref, color=GRIS, lw=1.5, ls=(0, (5, 4)), label="Référence centralisée")
+        ax.set_title(NOMS_JEUX[jeu], fontsize=14, color=VERT_FONCE, fontweight="bold")
+        ax.set_xlabel("Round", fontsize=12, color=TEXTE)
+        ax.set_xticks(range(1, 11))
+        bas = min(d["accuracy"].min(), ref)
+        ax.set_ylim(bas - 0.04, min(1.0, max(d["accuracy"].max(), ref) + 0.03))
+        ax.yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0, decimals=0))
+        ax.grid(axis="y", color="#DDE6E0", lw=0.8)
+        _axes_sobres(ax)
+    axes[0].set_ylabel("Accuracy sur le jeu de test", fontsize=12, color=TEXTE)
+    axes[0].legend(fontsize=11, frameon=False, loc="lower right")
+    fig.tight_layout()
+    sauver(fig, "fig8_convergence_sans_chiffrement.png")
+
+
 if __name__ == "__main__":
     architecture_globale()
     sequence()
@@ -258,4 +349,6 @@ if __name__ == "__main__":
     modele_images()
     cas_utilisation()
     formules()
+    resultats_pima()
+    convergence()
     print("Figures créées dans", OUT)
