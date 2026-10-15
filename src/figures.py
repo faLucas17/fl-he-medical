@@ -262,6 +262,8 @@ SCHEMAS_AFFICHES = [("sans_chiffrement", "Sans chiffrement"), ("ckks", "CKKS"), 
 # Référence centralisée affichée par : python -m src.federe <jeu> sans
 REFERENCE_CENTRALISEE = {"pima": 0.760, "heart_uci": 0.811, "ckd": 0.988}
 NOMS_JEUX = {"pima": "Pima (diabète)", "heart_uci": "Heart UCI (cœur)", "ckd": "CKD (rein)"}
+NB_HOPITAUX = {"pima": 3, "heart_uci": 4, "ckd": 3}
+POIDS = {"pima": 833, "heart_uci": 1409, "ckd": 1345}
 
 
 def _lire(jeu, schema):
@@ -278,42 +280,102 @@ def _axes_sobres(ax):
     ax.tick_params(colors=TEXTE, labelsize=12)
 
 
-def _barres(ax, noms, valeurs, etiquettes, titre_axe, log=False):
+def _barres(ax, noms, valeurs, etiquettes, log=False):
     y = list(range(len(noms)))[::-1]
     couleurs = [GRIS if n == "Sans chiffrement" else VERT for n in noms]
-    ax.barh(y, valeurs, height=0.6, color=couleurs)
+    ax.barh(y, valeurs, height=0.62, color=couleurs)
     ax.set_yticks(y)
-    ax.set_yticklabels(noms, fontsize=13)
-    if log:
-        ax.set_xscale("log")
-    ax.set_xlabel(titre_axe, fontsize=12, color=TEXTE)
+    ax.set_yticklabels(noms, fontsize=12)
     _axes_sobres(ax)
     ax.grid(axis="x", color="#DDE6E0", lw=0.8)
     ax.set_axisbelow(True)
+    xmax = ax.get_xlim()[1]
     for yi, v, t in zip(y, valeurs, etiquettes):
-        ax.text(v * 1.35 if log else v + ax.get_xlim()[1] * 0.0 + 12, yi, t, va="center", fontsize=12.5, color=TEXTE, fontweight="bold")
+        x = v * 1.4 if log else v + xmax * 0.02
+        ax.text(x, yi, t, va="center", fontsize=11.5, color=TEXTE, fontweight="bold")
 
 
-def resultats_pima():
-    """Temps de chiffrement et taille des messages sur Pima, pour les 4 configurations."""
-    lignes = [(nom, _lire("pima", code)) for code, nom in SCHEMAS_AFFICHES]
-    lignes = [(nom, d) for nom, d in lignes if d is not None]
-    if not lignes:
+def _virgule(texte):
+    return texte.replace(".", ",")
+
+
+def _jeux_disponibles():
+    jeux = []
+    for jeu in NOMS_JEUX:
+        lignes = [(nom, _lire(jeu, code)) for code, nom in SCHEMAS_AFFICHES]
+        lignes = [(nom, d) for nom, d in lignes if d is not None]
+        if lignes:
+            jeux.append((jeu, lignes))
+    return jeux
+
+
+def resultats_par_jeu():
+    """Temps de chiffrement par hôpital et taille des messages, pour chaque jeu et chaque schéma."""
+    jeux = _jeux_disponibles()
+    if not jeux:
         return
-    noms = [n for n, _ in lignes]
-    temps = [d["t_chiffrement"].mean() for _, d in lignes]
-    tailles = [d["octets_par_message"].mean() / 1024 for _, d in lignes]
 
-    fig, ax = plt.subplots(figsize=(10, 3.6))
-    _barres(ax, noms, temps, [(f"{t:.3f} s" if t < 1 else f"{t:.0f} s").replace(".", ",") for t in temps],
-            "Temps moyen de chiffrement par round, 3 hôpitaux (secondes, échelle logarithmique)", log=True)
-    ax.set_xlim(min(temps) / 2, max(temps) * 12)
-    sauver(fig, "fig6_temps_chiffrement_pima.png")
+    # Temps moyen de chiffrement par hôpital et par round (échelle logarithmique)
+    fig, axes = plt.subplots(1, len(jeux), figsize=(4.3 * len(jeux), 3.4))
+    axes = axes if len(jeux) > 1 else [axes]
+    for ax, (jeu, lignes) in zip(axes, jeux):
+        noms = [n for n, _ in lignes]
+        temps = [d["t_chiffrement"].mean() / NB_HOPITAUX[jeu] for _, d in lignes]
+        ax.set_xscale("log")
+        ax.set_xlim(1e-4, 5e3)
+        _barres(ax, noms, temps, [_virgule(f"{t:.3f} s" if t < 1 else f"{t:.0f} s") for t in temps], log=True)
+        ax.set_title(NOMS_JEUX[jeu], fontsize=14, color=VERT_FONCE, fontweight="bold")
+        if ax is not axes[0]:
+            ax.set_yticklabels([])
+    fig.supxlabel("Temps moyen de chiffrement par hôpital et par round (secondes, échelle logarithmique)",
+                  fontsize=12, color=TEXTE)
+    fig.tight_layout()
+    sauver(fig, "fig6_temps_chiffrement.png")
 
-    fig, ax = plt.subplots(figsize=(10, 3.6))
-    _barres(ax, noms, tailles, [f"{t:.1f} Ko".replace(".", ",") for t in tailles], "Taille d'un message envoyé par un hôpital (Ko)")
-    ax.set_xlim(0, max(tailles) * 1.18)
-    sauver(fig, "fig7_taille_messages_pima.png")
+    # Taille d'un message envoyé par un hôpital
+    fig, axes = plt.subplots(1, len(jeux), figsize=(4.3 * len(jeux), 3.4))
+    axes = axes if len(jeux) > 1 else [axes]
+    for ax, (jeu, lignes) in zip(axes, jeux):
+        noms = [n for n, _ in lignes]
+        tailles = [d["octets_par_message"].mean() / 1024 for _, d in lignes]
+        ax.set_xlim(0, 1500)
+        _barres(ax, noms, tailles, [_virgule(f"{t:.0f} Ko") for t in tailles])
+        ax.set_title(NOMS_JEUX[jeu], fontsize=14, color=VERT_FONCE, fontweight="bold")
+        if ax is not axes[0]:
+            ax.set_yticklabels([])
+    fig.supxlabel("Taille d'un message envoyé par un hôpital (Ko)", fontsize=12, color=TEXTE)
+    fig.tight_layout()
+    sauver(fig, "fig7_taille_messages.png")
+
+
+def taille_selon_poids():
+    """Taille d'un message selon le nombre de poids P. CKKS et BFV restent constants
+    (un seul chiffré tant que P <= 8 192) ; Paillier grandit de 768 octets par poids."""
+    P = list(range(0, 2001, 10))
+    COUL_CKKS, COUL_BFV, COUL_PAILLIER = VERT, "#B08800", ROUGE
+    fig, ax = plt.subplots(figsize=(10, 4.2))
+    ax.plot(P, [768 * p / 1024 for p in P], color=COUL_PAILLIER, lw=2)
+    ax.plot(P, [642.5] * len(P), color=COUL_CKKS, lw=2, ls=(0, (6, 3)))
+    ax.plot(P, [422.3] * len(P), color=COUL_BFV, lw=2, ls=(0, (2, 2)))
+    ax.text(1990, 1500, "Paillier : 0,75 Ko par poids", color=TEXTE, fontsize=12, ha="right", fontweight="bold")
+    ax.text(1990, 642.5 + 35, "CKKS : 642 Ko", color=TEXTE, fontsize=12, ha="right", fontweight="bold")
+    ax.text(1990, 422.3 - 85, "BFV : 422 Ko", color=TEXTE, fontsize=12, ha="right", fontweight="bold")
+    for jeu, p in POIDS.items():
+        ax.plot([p], [768 * p / 1024], "o", color=COUL_PAILLIER, ms=9, mec="white", mew=2, zorder=4)
+        decalage = {"pima": (12, -22), "ckd": (-10, 12), "heart_uci": (10, -16)}[jeu]
+        ax.annotate(f"{NOMS_JEUX[jeu].split(' (')[0]} (P = {p})", (p, 768 * p / 1024), xytext=decalage,
+                    textcoords="offset points", ha="right" if jeu == "ckd" else "left", fontsize=11, color=TEXTE,
+                    bbox=dict(facecolor="white", edgecolor="none", pad=1))
+    for seuil in (422.3 * 1024 / 768, 642.5 * 1024 / 768):
+        ax.axvline(seuil, color=GRIS, lw=1, ls=":")
+        ax.text(seuil + 12, 60, f"P = {seuil:.0f}", fontsize=11, color=GRIS)
+    ax.set_xlim(0, 2000)
+    ax.set_ylim(0, 1600)
+    ax.set_xlabel("Nombre de poids du modèle (P)", fontsize=12, color=TEXTE)
+    ax.set_ylabel("Taille d'un message (Ko)", fontsize=12, color=TEXTE)
+    ax.grid(axis="y", color="#DDE6E0", lw=0.8)
+    _axes_sobres(ax)
+    sauver(fig, "fig9_taille_selon_poids.png")
 
 
 def convergence():
@@ -325,7 +387,7 @@ def convergence():
     fig, axes = plt.subplots(1, len(jeux), figsize=(4 * len(jeux), 3.6), sharey=False)
     axes = axes if len(jeux) > 1 else [axes]
     for ax, (jeu, d) in zip(axes, jeux):
-        ax.plot(d["round"], d["accuracy"], color=VERT, lw=2, marker="o", ms=5, label="FL (3 ou 4 hôpitaux)")
+        ax.plot(d["round"], d["accuracy"], color=VERT, lw=2, marker="o", ms=5, label="FL, avec ou sans chiffrement")
         ref = REFERENCE_CENTRALISEE[jeu]
         ax.axhline(ref, color=GRIS, lw=1.5, ls=(0, (5, 4)), label="Référence centralisée")
         ax.set_title(NOMS_JEUX[jeu], fontsize=14, color=VERT_FONCE, fontweight="bold")
@@ -349,6 +411,7 @@ if __name__ == "__main__":
     modele_images()
     cas_utilisation()
     formules()
-    resultats_pima()
+    resultats_par_jeu()
+    taille_selon_poids()
     convergence()
     print("Figures créées dans", OUT)
