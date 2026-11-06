@@ -453,10 +453,80 @@ def fig5_1_convergence():
 
 
 def fig5_2_temps():
-    _barres_par_jeu("t_chiffrement", True, True,
-                    "Temps moyen de chiffrement par hôpital et par round (s, échelle logarithmique)",
-                    "fig5_2_temps_chiffrement.png", (1e-4, 5e3),
-                    lambda t: f"{t:.3f} s" if t < 1 else f"{t:.0f} s")
+    """Temps de chiffrement par hôpital et par round : moyenne ± écart-type sur 5 répétitions
+    (results/repetitions/resume.csv). Sans ce fichier, on revient à la répétition unique."""
+    import pandas as pd
+    f = RESULTATS / "repetitions" / "resume.csv"
+    if not f.exists():
+        _barres_par_jeu("t_chiffrement", True, True,
+                        "Temps moyen de chiffrement par hôpital et par round (s, échelle logarithmique)",
+                        "fig5_2_temps_chiffrement.png", (1e-4, 5e3),
+                        lambda t: f"{t:.3f} s" if t < 1 else f"{t:.0f} s")
+        return
+    r = pd.read_csv(f)
+    codes = {"sans_chiffrement": "sans", "ckks": "ckks", "bfv": "bfv", "paillier": "paillier"}
+    fig, axes = plt.subplots(1, len(JEUX), figsize=(4.3 * len(JEUX), 3.4))
+    for ax, jeu in zip(axes, JEUX):
+        y = list(range(len(SCHEMAS)))[::-1]
+        for yi, (c, n) in zip(y, SCHEMAS):
+            ligne = r[(r["jeu"] == jeu) & (r["schema"] == codes[c])]
+            if ligne.empty:
+                continue
+            m = ligne["t_chiffrement_hopital_moyenne"].iloc[0]
+            e = ligne["t_chiffrement_hopital_ecart_type"].iloc[0]
+            ax.barh(yi, m, height=0.62, facecolor="white", edgecolor="black", hatch=HACHURES[n], lw=1.0)
+            ax.errorbar(m, yi, xerr=[[min(e, m * 0.9)], [e]], fmt="none", ecolor="black", capsize=4, lw=1.0)
+            if m < 0.01:
+                texte = f"{m:.4f} s"
+            elif m < 1:
+                texte = f"{m:.3f} s"
+            else:
+                texte = f"{m:.0f} ± {e:.0f} s" if e >= 1 else f"{m:.1f} ± {e:.1f} s"
+            ax.text((m + e) * 1.5, yi, _virgule(texte), va="center", fontsize=10.5)
+        ax.set_xscale("log")
+        ax.set_xlim(1e-4, 2e4)
+        ax.set_yticks(y)
+        ax.set_yticklabels([n for _, n in SCHEMAS] if ax is axes[0] else [], fontsize=11)
+        ax.set_title(JEUX[jeu], fontsize=13)
+        ax.grid(axis="x", color="#CCCCCC", lw=0.6)
+        ax.set_axisbelow(True)
+        _axes(ax)
+    fig.supxlabel("Temps de chiffrement par hôpital et par round (s, échelle logarithmique ; "
+                  "moyenne ± écart-type, 5 répétitions)", fontsize=11)
+    fig.tight_layout()
+    sauver(fig, "fig5_2_temps_chiffrement.png")
+
+
+def fig5_5_round_reseau():
+    """Durée d'un round complet dans le système en réseau (results/reseau/resume.csv)."""
+    import pandas as pd
+    f = RESULTATS / "reseau" / "resume.csv"
+    if not f.exists():
+        return
+    r = pd.read_csv(f)
+    codes = {"sans_chiffrement": "sans", "ckks": "ckks", "bfv": "bfv", "paillier": "paillier"}
+    fig, axes = plt.subplots(1, len(JEUX), figsize=(4.3 * len(JEUX), 3.4))
+    for ax, jeu in zip(axes, JEUX):
+        y = list(range(len(SCHEMAS)))[::-1]
+        for yi, (c, n) in zip(y, SCHEMAS):
+            ligne = r[(r["jeu"] == jeu) & (r["schema"] == codes[c])]
+            if ligne.empty:
+                continue
+            v = ligne["t_round"].iloc[0]
+            ax.barh(yi, v, height=0.62, facecolor="white", edgecolor="black", hatch=HACHURES[n], lw=1.0)
+            ax.text(v * 1.3, yi, _virgule(f"{v:.2f} s" if v < 10 else f"{v:.0f} s"), va="center", fontsize=10.5)
+        ax.set_xscale("log")
+        ax.set_xlim(0.1, 2000)
+        ax.set_yticks(y)
+        ax.set_yticklabels([n for _, n in SCHEMAS] if ax is axes[0] else [], fontsize=11)
+        ax.set_title(JEUX[jeu], fontsize=13)
+        ax.grid(axis="x", color="#CCCCCC", lw=0.6)
+        ax.set_axisbelow(True)
+        _axes(ax)
+    fig.supxlabel("Durée d'un round complet en réseau, vue par l'hôpital coordinateur (s, échelle logarithmique)",
+                  fontsize=11)
+    fig.tight_layout()
+    sauver(fig, "fig5_5_round_reseau.png")
 
 
 def fig5_3_taille():
@@ -517,6 +587,6 @@ if __name__ == "__main__":
               fig1_4_principe_chiffrement_homomorphe, fig2_1_cas_utilisation, fig2_2_sequence,
               fig3_1_modele_menace, fig3_2_architecture, fig3_3_reseau_tabulaire, fig3_4_modele_images,
               fig4_1_organisation_code, fig4_2_deploiement_reseau, fig5_1_convergence, fig5_2_temps, fig5_3_taille,
-              fig5_4_taille_selon_poids]:
+              fig5_4_taille_selon_poids, fig5_5_round_reseau]:
         f()
     print("Figures créées dans", OUT)
