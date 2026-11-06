@@ -711,3 +711,240 @@ ckd        bfv       |       0.988 |     0.988 |     422 Ko |      0.0142 |     
 Tableau enregistrÃ© dans C:\Users\Dell\fl-he-medical\results\reseau\resume.csv
 (.venv) 
 Dell@DESKTOP-BPJMNDB MINGW64 ~/fl-he-medical (main)
+>>> pima | paillier | répétition 1/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.721 | chiffrement 57.2537 s | RAM +81.8 Mo | durée 1891 s
+
+>>> pima | paillier | répétition 2/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.708 | chiffrement 40.8758 s | RAM +0.6 Mo | durée 1336 s
+
+>>> pima | paillier | répétition 3/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.714 | chiffrement 33.3041 s | RAM +0.1 Mo | durée 1097 s
+
+>>> pima | paillier | répétition 4/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.682 | chiffrement 32.5601 s | RAM +0.4 Mo | durée 1075 s
+
+>>> pima | paillier | répétition 5/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.695 | chiffrement 34.2467 s | RAM +0.1 Mo | durée 1127 s
+
+>>> heart_uci | paillier | répétition 1/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.816 | chiffrement 67.5304 s | RAM +4.7 Mo | durée 2914 s
+
+>>> heart_uci | paillier | répétition 2/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.822 | chiffrement 71.7422 s | RAM +2.0 Mo | durée 3072 s
+
+>>> heart_uci | paillier | répétition 3/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.843 | chiffrement 41.1032 s | RAM +1.7 Mo | durée 1762 s
+
+>>> heart_uci | paillier | répétition 4/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.822 | chiffrement 35.8765 s | RAM +0.5 Mo | durée 1543 s
+
+>>> heart_uci | paillier | répétition 5/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.838 | chiffrement 35.8215 s | RAM +0.4 Mo | durée 1539 s
+
+>>> ckd | paillier | répétition 1/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.988 | chiffrement 34.1488 s | RAM +0.2 Mo | durée 1127 s
+
+>>> ckd | paillier | répétition 2/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.975 | chiffrement 34.1670 s | RAM +0.2 Mo | durée 1125 s
+
+>>> ckd | paillier | répétition 3/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.988 | chiffrement 34.3086 s | RAM +0.1 Mo | durée 1131 s
+
+>>> ckd | paillier | répétition 4/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.988 | chiffrement 34.1465 s | RAM +0.1 Mo | durée 1124 s
+
+>>> ckd | paillier | répétition 5/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.975 | chiffrement 34.1615 s | RAM +0.1 Mo | durée 1125 s
+
+=== Moyenne ± écart-type ===
+Jeu        Schéma     n |        Accuracy |     Chiffrement (s) | RAM ajoutée (Mo) | Message (Ko)
+pima       sans       5 | 0.704 ± 0.016 |   0.0002 ±  0.0000 |    15.4 ±   34.2 |          6.5
+pima       ckks       5 | 0.704 ± 0.016 |   0.0224 ±  0.0010 |     1.8 ±    3.2 |        642.4
+pima       bfv        5 | 0.704 ± 0.016 |   0.0151 ±  0.0051 |     0.7 ±    1.4 |        422.3
+pima       paillier   5 | 0.704 ± 0.016 |  39.6481 ± 10.3818 |    16.6 ±   36.5 |        624.8
+heart_uci  sans       5 | 0.828 ± 0.012 |   0.0005 ±  0.0001 |     0.2 ±    0.1 |         11.0
+heart_uci  ckks       5 | 0.828 ± 0.012 |   0.0462 ±  0.0062 |     2.6 ±    1.1 |        642.3
+heart_uci  bfv        5 | 0.828 ± 0.012 |   0.0214 ±  0.0038 |     0.5 ±    0.8 |        422.3
+heart_uci  paillier   5 | 0.828 ± 0.012 |  50.4148 ± 17.7400 |     1.9 ±    1.7 |       1056.8
+ckd        sans       5 | 0.982 ± 0.007 |   0.0004 ±  0.0001 |     0.1 ±    0.0 |         10.5
+ckd        ckks       5 | 0.982 ± 0.007 |   0.0485 ±  0.0070 |     0.9 ±    1.1 |        642.4
+ckd        bfv        5 | 0.982 ± 0.007 |   0.0197 ±  0.0032 |     0.0 ±    0.0 |        422.3
+ckd        paillier   5 | 0.982 ± 0.007 |  34.1865 ±  0.0688 |     0.1 ±    0.1 |       1008.8
+
+Tableau enregistré dans C:\Users\Dell\fl-he-medical\results\repetitions\resume.csv
+
+>>> pima | paillier | 1 serveur + 3 hôpitaux
+    terminé en 415 s
+
+>>> heart_uci | paillier | 1 serveur + 4 hôpitaux
+    terminé en 834 s
+
+>>> ckd | paillier | 1 serveur + 3 hôpitaux
+    terminé en 669 s
+
+=== Système en réseau : résumé ===
+Jeu        Schéma    | Acc. réseau | Acc. simu |    Message | Chiffr. (s) | Transfert (s) | Round (s) | RAM hôp.
+pima       sans      |       0.721 |     0.721 |       7 Ko |      0.0005 |        0.0001 |      0.65 |   375 Mo
+pima       ckks      |       0.721 |     0.721 |     642 Ko |      0.0437 |        0.0039 |      0.78 |   434 Mo
+pima       bfv       |       0.721 |     0.721 |     422 Ko |      0.0182 |        0.0063 |      0.70 |   422 Mo
+pima       paillier  |       0.721 |     0.721 |     631 Ko |     30.8711 |        0.0042 |     40.32 |   379 Mo
+heart_uci  sans      |       0.816 |     0.816 |      11 Ko |      0.0004 |        0.0001 |      0.59 |   376 Mo
+heart_uci  ckks      |       0.816 |     0.816 |     642 Ko |      0.0442 |        0.0037 |      0.79 |   435 Mo
+heart_uci  bfv       |       0.816 |     0.816 |     422 Ko |      0.0222 |        0.0033 |      0.81 |   422 Mo
+heart_uci  paillier  |       0.816 |     0.816 |    1068 Ko |     63.2231 |        0.0071 |     82.18 |   381 Mo
+ckd        sans      |       0.988 |     0.988 |      11 Ko |      0.0005 |        0.0002 |      0.55 |   375 Mo
+ckd        ckks      |       0.988 |     0.988 |     642 Ko |      0.0562 |        0.0026 |      0.88 |   434 Mo
+ckd        bfv       |       0.988 |     0.988 |     422 Ko |      0.0142 |        0.0012 |      0.52 |   421 Mo
+ckd        paillier  |       0.988 |     0.988 |    1019 Ko |     50.5879 |        0.0064 |     65.72 |   381 Mo
+
+Tableau enregistré dans C:\Users\Dell\fl-he-medical\results\reseau\resume.csv
