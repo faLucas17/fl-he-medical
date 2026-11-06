@@ -1,0 +1,713 @@
+
+Dell@DESKTOP-BPJMNDB MINGW64 ~/fl-he-medical (main)
+$  source /c/Users/Dell/fl-he-medical/.venv/Scripts/activate
+(.venv) 
+Dell@DESKTOP-BPJMNDB MINGW64 ~/fl-he-medical (main)
+$ python -m tests.test_systeme
+
+1. Agrégation chiffrée avec un serveur qui n'a que la clé publique
+  OK   Sans chiffrement : somme déchiffrée = somme en clair (écart max 0.0e+00)
+  OK   CKKS : somme déchiffrée = somme en clair (écart max 2.6e-08)
+  OK   BFV : somme déchiffrée = somme en clair (écart max 1.4e-07)
+  OK   Paillier : somme déchiffrée = somme en clair (écart max 1.4e-07)
+
+2. Le serveur ne peut pas déchiffrer
+  OK   CKKS : le déchiffrement échoue sans clé secrète
+  OK   BFV : le déchiffrement échoue sans clé secrète
+  OK   Paillier : le déchiffrement échoue sans clé secrète
+
+3. Le modèle ne partage pas sa mémoire avec le vecteur de poids
+  OK   modifier le modèle local ne change pas le modèle global
+
+4. Envoi et réception d'un message par le réseau
+  OK   en-tête reçu intact
+  OK   blocs reçus identiques aux blocs envoyés
+  OK   même nombre d'octets des deux côtés (700829)
+
+Tous les tests sont réussis (11 vérifications).
+(.venv) 
+Dell@DESKTOP-BPJMNDB MINGW64 ~/fl-he-medical (main)
+$ git add .
+git commit -m "Systeme en reseau, 5 repetitions, correction du round 1"
+git push
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/chiffrement.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/federe.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/figures_rapport.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/modele.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/hopital.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lancer_reseau.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/mesure.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/repetitions.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/reseau.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/serveur.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/test_systeme.py', LF will be replaced by CRLF the next time Git touches it
+[main 3e95134] Systeme en reseau, 5 repetitions, correction du round 1
+ 14 files changed, 990 insertions(+), 7 deletions(-)
+ create mode 100644 README.md
+ create mode 100644 src/hopital.py
+ create mode 100644 src/lancer_reseau.py
+ create mode 100644 src/mesure.py
+ create mode 100644 src/repetitions.py
+ create mode 100644 src/reseau.py
+ create mode 100644 src/serveur.py
+ create mode 100644 tests/__init__.py
+ create mode 100644 tests/test_systeme.py
+Enumerating objects: 25, done.
+Counting objects: 100% (25/25), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (17/17), done.
+Writing objects: 100% (17/17), 18.38 KiB | 2.04 MiB/s, done.
+Total 17 (delta 5), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (5/5), completed with 5 local objects.
+To https://github.com/faLucas17/fl-he-medical.git
+   eb88f4f..3e95134  main -> main
+(.venv) 
+Dell@DESKTOP-BPJMNDB MINGW64 ~/fl-he-medical (main)
+$ python -m src.repetitions --schemas sans ckks bfv
+
+>>> pima | sans | répétition 1/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.721 | chiffrement 0.0002 s | RAM +76.6 Mo | durée 5 s
+
+>>> pima | sans | répétition 2/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.708 | chiffrement 0.0002 s | RAM +0.3 Mo | durée 2 s
+
+>>> pima | sans | répétition 3/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.714 | chiffrement 0.0002 s | RAM +0.0 Mo | durée 2 s
+
+>>> pima | sans | répétition 4/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.682 | chiffrement 0.0002 s | RAM +0.0 Mo | durée 2 s
+
+>>> pima | sans | répétition 5/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.695 | chiffrement 0.0002 s | RAM +0.0 Mo | durée 2 s
+
+>>> pima | ckks | répétition 1/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.721 | chiffrement 0.0223 s | RAM +7.5 Mo | durée 2 s
+
+>>> pima | ckks | répétition 2/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.708 | chiffrement 0.0234 s | RAM +1.2 Mo | durée 2 s
+
+>>> pima | ckks | répétition 3/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.714 | chiffrement 0.0209 s | RAM +0.0 Mo | durée 2 s
+
+>>> pima | ckks | répétition 4/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.682 | chiffrement 0.0220 s | RAM +0.0 Mo | durée 2 s
+
+>>> pima | ckks | répétition 5/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.695 | chiffrement 0.0234 s | RAM +0.0 Mo | durée 3 s
+
+>>> pima | bfv | répétition 1/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.721 | chiffrement 0.0105 s | RAM +3.1 Mo | durée 2 s
+
+>>> pima | bfv | répétition 2/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.708 | chiffrement 0.0220 s | RAM +0.0 Mo | durée 4 s
+
+>>> pima | bfv | répétition 3/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.714 | chiffrement 0.0177 s | RAM +0.2 Mo | durée 4 s
+
+>>> pima | bfv | répétition 4/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.682 | chiffrement 0.0097 s | RAM +0.0 Mo | durée 2 s
+
+>>> pima | bfv | répétition 5/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.695 | chiffrement 0.0156 s | RAM +0.0 Mo | durée 3 s
+
+>>> heart_uci | sans | répétition 1/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.816 | chiffrement 0.0005 s | RAM +0.4 Mo | durée 5 s
+
+>>> heart_uci | sans | répétition 2/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.822 | chiffrement 0.0005 s | RAM +0.2 Mo | durée 5 s
+
+>>> heart_uci | sans | répétition 3/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.843 | chiffrement 0.0004 s | RAM +0.1 Mo | durée 4 s
+
+>>> heart_uci | sans | répétition 4/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.822 | chiffrement 0.0004 s | RAM +0.2 Mo | durée 5 s
+
+>>> heart_uci | sans | répétition 5/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.838 | chiffrement 0.0005 s | RAM +0.1 Mo | durée 5 s
+
+>>> heart_uci | ckks | répétition 1/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.816 | chiffrement 0.0483 s | RAM +4.0 Mo | durée 7 s
+
+>>> heart_uci | ckks | répétition 2/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.822 | chiffrement 0.0443 s | RAM +2.8 Mo | durée 6 s
+
+>>> heart_uci | ckks | répétition 3/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.843 | chiffrement 0.0363 s | RAM +2.0 Mo | durée 5 s
+
+>>> heart_uci | ckks | répétition 4/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.822 | chiffrement 0.0507 s | RAM +1.0 Mo | durée 7 s
+
+>>> heart_uci | ckks | répétition 5/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.838 | chiffrement 0.0516 s | RAM +3.3 Mo | durée 7 s
+
+>>> heart_uci | bfv | répétition 1/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.816 | chiffrement 0.0239 s | RAM +0.1 Mo | durée 6 s
+
+>>> heart_uci | bfv | répétition 2/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.822 | chiffrement 0.0235 s | RAM +0.1 Mo | durée 6 s
+
+>>> heart_uci | bfv | répétition 3/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.843 | chiffrement 0.0248 s | RAM +0.1 Mo | durée 6 s
+
+>>> heart_uci | bfv | répétition 4/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.822 | chiffrement 0.0184 s | RAM +2.0 Mo | durée 5 s
+
+>>> heart_uci | bfv | répétition 5/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.838 | chiffrement 0.0162 s | RAM +0.2 Mo | durée 4 s
+
+>>> ckd | sans | répétition 1/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.988 | chiffrement 0.0004 s | RAM +0.1 Mo | durée 2 s
+
+>>> ckd | sans | répétition 2/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.975 | chiffrement 0.0004 s | RAM +0.1 Mo | durée 2 s
+
+>>> ckd | sans | répétition 3/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.988 | chiffrement 0.0005 s | RAM +0.1 Mo | durée 2 s
+
+>>> ckd | sans | répétition 4/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.988 | chiffrement 0.0005 s | RAM +0.0 Mo | durée 2 s
+
+>>> ckd | sans | répétition 5/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.975 | chiffrement 0.0004 s | RAM +0.0 Mo | durée 2 s
+
+>>> ckd | ckks | répétition 1/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.988 | chiffrement 0.0512 s | RAM +2.7 Mo | durée 4 s
+
+>>> ckd | ckks | répétition 2/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.975 | chiffrement 0.0554 s | RAM +0.0 Mo | durée 5 s
+
+>>> ckd | ckks | répétition 3/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.988 | chiffrement 0.0525 s | RAM +0.9 Mo | durée 4 s
+
+>>> ckd | ckks | répétition 4/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.988 | chiffrement 0.0377 s | RAM +0.9 Mo | durée 3 s
+
+>>> ckd | ckks | répétition 5/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.975 | chiffrement 0.0460 s | RAM +0.0 Mo | durée 4 s
+
+>>> ckd | bfv | répétition 1/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.988 | chiffrement 0.0231 s | RAM +0.0 Mo | durée 3 s
+
+>>> ckd | bfv | répétition 2/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.975 | chiffrement 0.0204 s | RAM +0.0 Mo | durée 3 s
+
+>>> ckd | bfv | répétition 3/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.988 | chiffrement 0.0222 s | RAM +0.0 Mo | durée 3 s
+
+>>> ckd | bfv | répétition 4/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.988 | chiffrement 0.0157 s | RAM +0.0 Mo | durée 2 s
+
+>>> ckd | bfv | répétition 5/5
+  round 1/10 terminé
+  round 2/10 terminé
+  round 3/10 terminé
+  round 4/10 terminé
+  round 5/10 terminé
+  round 6/10 terminé
+  round 7/10 terminé
+  round 8/10 terminé
+  round 9/10 terminé
+  round 10/10 terminé
+    accuracy 0.975 | chiffrement 0.0173 s | RAM +0.0 Mo | durée 2 s
+
+=== Moyenne ± écart-type ===
+Jeu        Schéma     n |        Accuracy |     Chiffrement (s) | RAM ajoutée (Mo) | Message (Ko)
+pima       sans       5 | 0.704 ± 0.016 |   0.0002 ±  0.0000 |    15.4 ±   34.2 |          6.5
+pima       ckks       5 | 0.704 ± 0.016 |   0.0224 ±  0.0010 |     1.8 ±    3.2 |        642.4
+pima       bfv        5 | 0.704 ± 0.016 |   0.0151 ±  0.0051 |     0.7 ±    1.4 |        422.3
+heart_uci  sans       5 | 0.828 ± 0.012 |   0.0005 ±  0.0001 |     0.2 ±    0.1 |         11.0
+heart_uci  ckks       5 | 0.828 ± 0.012 |   0.0462 ±  0.0062 |     2.6 ±    1.1 |        642.3
+heart_uci  bfv        5 | 0.828 ± 0.012 |   0.0214 ±  0.0038 |     0.5 ±    0.8 |        422.3
+ckd        sans       5 | 0.982 ± 0.007 |   0.0004 ±  0.0001 |     0.1 ±    0.0 |         10.5
+ckd        ckks       5 | 0.982 ± 0.007 |   0.0485 ±  0.0070 |     0.9 ±    1.1 |        642.4
+ckd        bfv        5 | 0.982 ± 0.007 |   0.0197 ±  0.0032 |     0.0 ±    0.0 |        422.3
+
+Tableau enregistré dans C:\Users\Dell\fl-he-medical\results\repetitions\resume.csv
+(.venv) 
+Dell@DESKTOP-BPJMNDB MINGW64 ~/fl-he-medical (main)
+$ python -m src.lancer_reseau --jeu pima heart_uci ckd --schema sans ckks bfv
+
+>>> pima | sans | 1 serveur + 3 hôpitaux
+    terminé en 21 s
+
+>>> pima | ckks | 1 serveur + 3 hôpitaux
+    terminé en 23 s
+
+>>> pima | bfv | 1 serveur + 3 hôpitaux
+    terminé en 22 s
+
+>>> heart_uci | sans | 1 serveur + 4 hôpitaux
+    terminé en 20 s
+
+>>> heart_uci | ckks | 1 serveur + 4 hôpitaux
+    terminé en 25 s
+
+>>> heart_uci | bfv | 1 serveur + 4 hôpitaux
+    terminé en 22 s
+
+>>> ckd | sans | 1 serveur + 3 hôpitaux
+    terminé en 20 s
+
+>>> ckd | ckks | 1 serveur + 3 hôpitaux
+    terminé en 25 s
+
+>>> ckd | bfv | 1 serveur + 3 hôpitaux
+    terminé en 20 s
+
+=== Système en réseau : résumé ===
+Jeu        Schéma    | Acc. réseau | Acc. simu |    Message | Chiffr. (s) | Transfert (s) | Round (s) | RAM hôp.
+pima       sans      |       0.721 |     0.721 |       7 Ko |      0.0005 |        0.0001 |      0.65 |   375 Mo
+pima       ckks      |       0.721 |     0.721 |     642 Ko |      0.0437 |        0.0039 |      0.78 |   434 Mo
+pima       bfv       |       0.721 |     0.721 |     422 Ko |      0.0182 |        0.0063 |      0.70 |   422 Mo
+heart_uci  sans      |       0.816 |     0.816 |      11 Ko |      0.0004 |        0.0001 |      0.59 |   376 Mo
+heart_uci  ckks      |       0.816 |     0.816 |     642 Ko |      0.0442 |        0.0037 |      0.79 |   435 Mo
+heart_uci  bfv       |       0.816 |     0.816 |     422 Ko |      0.0222 |        0.0033 |      0.81 |   422 Mo
+ckd        sans      |       0.988 |     0.988 |      11 Ko |      0.0005 |        0.0002 |      0.55 |   375 Mo
+ckd        ckks      |       0.988 |     0.988 |     642 Ko |      0.0562 |        0.0026 |      0.88 |   434 Mo
+ckd        bfv       |       0.988 |     0.988 |     422 Ko |      0.0142 |        0.0012 |      0.52 |   421 Mo
+
+Tableau enregistré dans C:\Users\Dell\fl-he-medical\results\reseau\resume.csv
+(.venv) 
+Dell@DESKTOP-BPJMNDB MINGW64 ~/fl-he-medical (main)
