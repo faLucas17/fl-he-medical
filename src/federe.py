@@ -44,6 +44,26 @@ class SansChiffrement:
     def taille_octets(self, message):
         return message.nbytes
 
+    # --- Version en réseau : pas de clé, les poids voyagent en clair ---
+    def exporter_cles(self):
+        return b"", b""
+
+    @classmethod
+    def depuis_cles(cls, secrete=None, publique=None):
+        return cls()
+
+    def vers_octets(self, message):
+        return [np.asarray(message, dtype=np.float64).tobytes()]
+
+    def depuis_octets(self, blocs):
+        return np.frombuffer(blocs[0], dtype=np.float64).copy()
+
+
+def tous_les_schemas():
+    """Les quatre configurations comparées : sans chiffrement, CKKS, BFV, Paillier."""
+    from src.chiffrement import SCHEMAS
+    return {"sans": SansChiffrement, **SCHEMAS}
+
 
 def simuler(donnees, schema, nb_rounds=NB_ROUNDS, epoques=EPOQUES_LOCALES, graine=42):
     """Lance un apprentissage fédéré complet et renvoie les mesures de chaque round."""
@@ -128,8 +148,7 @@ if __name__ == "__main__":
     # Utilisation : python -m src.federe <jeu> <schéma>
     #   jeu    : pima, heart_uci, ckd
     #   schéma : sans, ckks, bfv, paillier
-    from src.chiffrement import SCHEMAS
-    SCHEMAS["sans"] = SansChiffrement
+    SCHEMAS = tous_les_schemas()
     nom_jeu = sys.argv[1] if len(sys.argv) > 1 else "pima"
     nom_schema = sys.argv[2] if len(sys.argv) > 2 else "sans"
     donnees = charger(nom_jeu)

@@ -344,6 +344,32 @@ def fig4_1_organisation_code():
     sauver(fig, "fig4_1_organisation_du_code.png")
 
 
+def fig4_2_deploiement_reseau():
+    """Déploiement réel : un processus (ou une machine) par participant."""
+    fig, ax = figure(12, 6.0)
+    boite(ax, 4.0, 4.5, 4.0, 1.3, "Machine serveur : serveur.py\nclé publique seulement\n(additionne sans déchiffrer)",
+          taille=T - 1)
+    cadenas(ax, 7.6, 5.5)
+    ax.text(8.2, 4.75, "port TCP 5050", fontsize=T - 2, style="italic", ha="left")
+    hop = [(0.4, "Machine A : hopital.py\n--indice 0 (coordinateur)\ndonnées locales"),
+           (4.4, "Machine B : hopital.py\n--indice 1\ndonnées locales"),
+           (8.4, "Machine C : hopital.py\n--indice 2\ndonnées locales")]
+    for k, (x, t) in enumerate(hop):
+        boite(ax, x, 1.4, 3.2, 1.3, t, taille=T - 1)
+        cx, sx = x + 1.6, 5.0 + k * 1.0
+        fleche(ax, cx - 0.3, 2.7, sx - 0.15, 4.5)
+        fleche(ax, sx + 0.15, 4.5, cx + 0.3, 2.7, tirets=True)
+    ax.text(1.3, 3.75, "POIDS : Enc(n_k W_k)", fontsize=T - 2, ha="left")
+    ax.text(10.7, 3.75, "SOMME C (chiffrée)", fontsize=T - 2, ha="right")
+    ax.plot([2.0, 2.0, 10.0, 10.0], [1.4, 0.75, 0.75, 1.4], color=NOIR, lw=1.1, ls=(0, (2, 2)))
+    ax.plot([6.0, 6.0], [0.75, 1.4], color=NOIR, lw=1.1, ls=(0, (2, 2)))
+    for x in (6.0, 10.0):
+        ax.annotate("", xy=(x, 1.4), xytext=(x, 1.1), arrowprops=dict(arrowstyle="-|>", lw=1.1, color=NOIR))
+    ax.text(6.0, 0.35, "dossier cles/ (clé secrète) copié par un canal sûr (clé USB), jamais par le serveur",
+            ha="center", fontsize=T - 2, style="italic")
+    sauver(fig, "fig4_2_deploiement_reseau.png")
+
+
 # ---------------------------------------------------------------------------
 # Chapitre 5 (graphiques à partir des résultats)
 # ---------------------------------------------------------------------------
@@ -490,7 +516,7 @@ if __name__ == "__main__":
     for f in [fig1_1_principe_fl, fig1_2_inversion_gradients, fig1_3_techniques_protection,
               fig1_4_principe_chiffrement_homomorphe, fig2_1_cas_utilisation, fig2_2_sequence,
               fig3_1_modele_menace, fig3_2_architecture, fig3_3_reseau_tabulaire, fig3_4_modele_images,
-              fig4_1_organisation_code, fig5_1_convergence, fig5_2_temps, fig5_3_taille,
+              fig4_1_organisation_code, fig4_2_deploiement_reseau, fig5_1_convergence, fig5_2_temps, fig5_3_taille,
               fig5_4_taille_selon_poids]:
         f()
     print("Figures créées dans", OUT)

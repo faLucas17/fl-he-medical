@@ -35,8 +35,13 @@ def lire_poids(modele: nn.Module) -> np.ndarray:
 
 
 def ecrire_poids(modele: nn.Module, vecteur: np.ndarray) -> None:
-    """Remet un vecteur de poids dans le modèle."""
-    tenseur = torch.as_tensor(np.asarray(vecteur, dtype=np.float32))
+    """Remet un vecteur de poids dans le modèle.
+
+    torch.tensor fait une COPIE : le modèle ne partage pas sa mémoire avec le
+    vecteur. Sans cette copie, l'entraînement d'un hôpital modifierait aussi
+    le vecteur du modèle global, et l'hôpital suivant ne partirait plus du
+    même modèle (erreur corrigée le 6 novembre 2026)."""
+    tenseur = torch.tensor(np.asarray(vecteur, dtype=np.float32))
     torch.nn.utils.vector_to_parameters(tenseur, modele.parameters())
 
 

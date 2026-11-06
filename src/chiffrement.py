@@ -16,7 +16,17 @@ en octets (« sérialisé »), comme s'il passait par le réseau, puis relu par
 le serveur avec le contexte public.
 
 Les trois schémas sont réglés à 128 bits de sécurité (section 3.3.2).
+
+Pour la version en réseau (src/serveur.py et src/hopital.py), chaque schéma sait
+aussi :
+    exporter_cles()               -> (clé secrète, clé publique) en octets
+    depuis_cles(secrete, publique) -> schéma rechargé à partir de ces octets
+    vers_octets(message)          -> liste de blocs d'octets à envoyer
+    depuis_octets(blocs)          -> message reconstruit à la réception
+Le serveur est créé avec depuis_cles(publique=...) : il ne reçoit jamais la
+clé secrète et ne peut donc qu'additionner.
 """
+import json
 import numpy as np
 import tenseal as ts
 from phe import paillier
@@ -61,6 +71,27 @@ class CKKS:
         self.contexte_serveur = self.contexte_hopitaux.copy()
         self.contexte_serveur.make_context_public()
         self.places = self.DEGRE // 2   # nombre de valeurs par message chiffré
+
+    # --- Clés et transport (version en réseau) ---
+    def exporter_cles(self):
+        return (self.contexte_hopitaux.serialize(save_secret_key=True),
+                self.contexte_serveur.serialize())
+
+    @classmethod
+    def depuis_cles(cls, secrete=None, publique=None):
+        schema = cls.__new__(cls)
+        schema.contexte_hopitaux = ts.context_from(secrete) if secrete else None
+        schema.contexte_serveur = ts.context_from(publique if publique else secrete)
+        if schema.contexte_hopitaux is None and schema.contexte_serveur.has_secret_key():
+            raise ValueError("Le contexte du serveur ne doit pas contenir la clé secrète.")
+        schema.places = cls.DEGRE // 2
+        return schema
+
+    def vers_octets(self, message):
+        return list(message)
+
+    def depuis_octets(self, blocs):
+        return list(blocs)
 
     def chiffrer(self, vecteur):
         return [ts.ckks_vector(self.contexte_hopitaux, bloc.tolist()).serialize()
@@ -107,6 +138,20 @@ class BFV:
         self.contexte_serveur.make_context_public()
         self.places = self.DEGRE
 
+    exporter_cles = CKKS.exporter_cles
+    vers_octets = CKKS.vers_octets
+    depuis_octets = CKKS.depuis_octets
+
+    @classmethod
+    def depuis_cles(cls, secrete=None, publique=None):
+        schema = cls.__new__(cls)
+        schema.contexte_hopitaux = ts.context_from(secrete) if secrete else None
+        schema.contexte_serveur = ts.context_from(publique if publique else secrete)
+        if schema.contexte_hopitaux is None and schema.contexte_serveur.has_secret_key():
+            raise ValueError("Le contexte du serveur ne doit pas contenir la clé secrète.")
+        schema.places = cls.DEGRE
+        return schema
+
     def chiffrer(self, vecteur):
         entiers = _en_entiers(vecteur)
         if np.abs(entiers).max() >= self.MODULE_TEXTE_CLAIR // 8:
@@ -144,13 +189,40 @@ class Paillier:
     nom = "Paillier"
     TAILLE_CLE = 3072
 
-    def __init__(self):
+    def __init__(self, taille_cle=None):
         self.cle_publique, self.cle_secrete = paillier.generate_paillier_keypair(
-            n_length=self.TAILLE_CLE)
+            n_length=taille_cle or self.TAILLE_CLE)
+        self._preparer()
+
+    def _preparer(self):
         self.n = self.cle_publique.n
         self.n_carre = self.cle_publique.nsquare
         # Un chiffré est un nombre modulo n², soit 2 x 3072 bits = 768 octets.
         self.octets_par_chiffre = (self.n_carre.bit_length() + 7) // 8
+
+    # --- Clés et transport (version en réseau) ---
+    def exporter_cles(self):
+        secrete = json.dumps({"n": str(self.n), "p": str(self.cle_secrete.p),
+                              "q": str(self.cle_secrete.q)}).encode()
+        publique = json.dumps({"n": str(self.n)}).encode()
+        return secrete, publique
+
+    @classmethod
+    def depuis_cles(cls, secrete=None, publique=None):
+        schema = cls.__new__(cls)
+        donnees = json.loads(secrete if secrete else publique)
+        schema.cle_publique = paillier.PaillierPublicKey(int(donnees["n"]))
+        schema.cle_secrete = (paillier.PaillierPrivateKey(schema.cle_publique, int(donnees["p"]),
+                                                          int(donnees["q"])) if secrete else None)
+        schema._preparer()
+        return schema
+
+    def vers_octets(self, message):
+        # Chaque chiffré devient un bloc de taille fixe (768 octets pour 3072 bits).
+        return [c.to_bytes(self.octets_par_chiffre, "big") for c in message]
+
+    def depuis_octets(self, blocs):
+        return [int.from_bytes(b, "big") for b in blocs]
 
     def chiffrer(self, vecteur):
         # On garde seulement le grand nombre entier du chiffré : c'est

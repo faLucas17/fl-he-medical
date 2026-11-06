@@ -10,3 +10,9 @@ __pycache__/
 
 # Resultats bruts volumineux
 results/raw/
+
+# Cles de chiffrement : ne JAMAIS les publier (la cle secrete est dedans)
+cles/
+
+# Journaux des executions en reseau
+results/reseau/journaux/
