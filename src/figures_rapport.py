@@ -9,6 +9,7 @@ import logging
 from pathlib import Path
 
 import matplotlib
+import numpy as np
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.ticker
@@ -582,11 +583,74 @@ def fig5_4_taille_selon_poids():
     sauver(fig, "fig5_4_taille_selon_poids.png")
 
 
+def fig5_6_attaque():
+    """Attaque par inversion de gradients : ré-identification et exemple d'un patient (results/attaque/)."""
+    import pandas as pd
+    f_resume, f_exemple = RESULTATS / "attaque" / "resume.csv", RESULTATS / "attaque" / "exemple.csv"
+    if not (f_resume.exists() and f_exemple.exists()):
+        return
+    r = pd.read_csv(f_resume)
+    r = r[r["jeu"] == "pima"]
+    ex = pd.read_csv(f_exemple)
+    ex = ex[ex["jeu"] == "pima"]
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(13, 4.3), gridspec_kw={"width_ratios": [1, 1.35]})
+
+    clair = r[r["configuration"] == "sans"].sort_values("taille_lot")
+    hasard = r[r["configuration"] == "hasard"].sort_values("taille_lot")
+    a1.plot(clair["taille_lot"], 100 * clair["reidentification"], color="black", lw=1.8, marker="o",
+            ms=6, label="Sans chiffrement")
+    a1.plot(hasard["taille_lot"], 100 * hasard["reidentification"], color="black", lw=1.2, ls=(0, (5, 4)),
+            label="Hasard (référence)")
+    marqueurs = {"ckks": ("s", "CKKS"), "bfv": ("^", "BFV"), "paillier": ("D", "Paillier")}
+    for cfg, (m, nom) in marqueurs.items():
+        d = r[r["configuration"] == cfg]
+        if not d.empty:
+            a1.plot(d["taille_lot"], 100 * d["reidentification"], ls="none", marker=m, ms=8, mfc="white",
+                    mec="black", mew=1.4, label=f"{nom} (clé de l'attaquant)")
+    a1.set_xscale("log", base=2)
+    a1.set_xticks([1, 2, 4, 8, 16])
+    a1.set_xticklabels(["1", "2", "4", "8", "16"])
+    a1.set_ylim(-3, 105)
+    a1.set_xlabel("Nombre de patients dans le lot (B)", fontsize=11)
+    a1.set_ylabel("Patients ré-identifiés (%)", fontsize=11)
+    a1.set_title("(a) Taux de ré-identification (Pima)", fontsize=12)
+    a1.legend(fontsize=9, frameon=False, loc="upper right")
+    a1.grid(axis="y", color="#CCCCCC", lw=0.6)
+    _axes(a1)
+
+    noms = {"Pregnancies": "Grossesses", "Glucose": "Glucose", "BloodPressure": "Tension",
+            "SkinThickness": "Pli cutané", "Insulin": "Insuline", "BMI": "IMC",
+            "DiabetesPedigreeFunction": "Hérédité", "Age": "Âge"}
+    x = np.arange(len(ex))
+    l = 0.27
+    a2.bar(x - l, ex["vrai"], l, facecolor="white", edgecolor="black", lw=1.0, label="Vrai patient")
+    a2.bar(x, ex["reconstruit_sans_chiffrement"], l, facecolor="#BBBBBB", edgecolor="black", lw=1.0,
+           label="Reconstruit, sans chiffrement")
+    a2.bar(x + l, ex["reconstruit_avec_ckks"], l, facecolor="white", edgecolor="black", hatch="xxx", lw=1.0,
+           label="Reconstruit, avec CKKS")
+    if "vrai_unite" in ex:
+        for xi, (v, vu) in enumerate(zip(ex["vrai"], ex["vrai_unite"])):
+            txt = f"{vu:.0f}" if abs(vu) >= 10 else _virgule(f"{vu:.1f}" if abs(vu) >= 1 else f"{vu:.2f}")
+            a2.text(xi - l, (v if v > 0 else 0) + 0.12, txt, ha="center", fontsize=9)
+    a2.axhline(0, color="black", lw=0.8)
+    a2.set_xticks(x)
+    a2.set_xticklabels([noms.get(v, v) for v in ex["variable"]], fontsize=10, rotation=20)
+    a2.set_ylabel("Valeur standardisée", fontsize=11)
+    a2.set_title("(b) Un patient (B = 1) : valeurs réelles au-dessus des barres", fontsize=12)
+    a2.legend(fontsize=9, frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=3)
+    a2.grid(axis="y", color="#CCCCCC", lw=0.6)
+    a2.set_axisbelow(True)
+    _axes(a2)
+    fig.tight_layout()
+    sauver(fig, "fig5_6_attaque_inversion.png")
+
+
 if __name__ == "__main__":
     for f in [fig1_1_principe_fl, fig1_2_inversion_gradients, fig1_3_techniques_protection,
               fig1_4_principe_chiffrement_homomorphe, fig2_1_cas_utilisation, fig2_2_sequence,
               fig3_1_modele_menace, fig3_2_architecture, fig3_3_reseau_tabulaire, fig3_4_modele_images,
               fig4_1_organisation_code, fig4_2_deploiement_reseau, fig5_1_convergence, fig5_2_temps, fig5_3_taille,
-              fig5_4_taille_selon_poids, fig5_5_round_reseau]:
+              fig5_4_taille_selon_poids, fig5_5_round_reseau,
+              fig5_6_attaque]:
         f()
     print("Figures créées dans", OUT)

@@ -40,6 +40,7 @@ class DonneesFederees:
     X_test: np.ndarray
     y_test: np.ndarray
     noms_variables: list = field(default_factory=list)
+    standardiseur: object = None   # pour revenir aux unités d'origine (attaque, figures)
 
     def resume(self) -> str:
         """Texte court qui décrit le découpage, pour vérification."""
@@ -197,7 +198,7 @@ def charger(nom: str, graine: int = 42) -> DonneesFederees:
     X_test, y_test = preparer(test)
     return DonneesFederees(nom=nom, noms_hopitaux=noms, X_hopitaux=list(X_hop),
                            y_hopitaux=list(y_hop), X_test=X_test, y_test=y_test,
-                           noms_variables=colonnes)
+                           noms_variables=colonnes, standardiseur=standardiseur)
 
 
 if __name__ == "__main__":
