@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#13302A">
+<title>Apprentissage fédéré chiffré</title>
+<style>
+:root{
+  --fond:#EEF3F0; --surface:#FFFFFF; --encre:#13302A; --doux:#5E706A; --trait:#D3DDD7;
+  --vert:#00853F; --vert-pale:#DCEFE3; --soleil:#F2C200; --soleil-pale:#FFF4C7; --rouge:#C8102E; --rouge-pale:#FBE3E6;
+  --nuit:#0F2620; --nuit-2:#163329; --nuit-texte:#CFE3D8; --nuit-doux:#7FA392;
+  --rayon:14px;
+  --titre:"Charter","Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif;
+  --texte:"Avenir Next","Segoe UI Variable Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:"Cascadia Code","SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--fond);color:var(--encre);font:16px/1.5 var(--texte);-webkit-font-smoothing:antialiased;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.page{max-width:1240px;margin:0 auto;padding:20px 16px 40px}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--soleil);outline-offset:2px;border-radius:6px}
+
+/* En-tête */
+.entete{display:grid;grid-template-columns:1fr auto;gap:12px 24px;align-items:end;margin-bottom:18px}
+.marque{display:flex;align-items:center;gap:10px;color:var(--doux);font-size:14px;margin-bottom:6px}
+.marque svg{flex:none}
+h1{font:600 clamp(28px,4.6vw,46px)/1.08 var(--titre);margin:0;letter-spacing:-.01em;max-width:30ch;text-wrap:balance}
+h1 .seconde{display:block;color:var(--vert)}
+h1.danger .seconde{color:var(--rouge)}
+.statut{display:flex;flex-direction:column;align-items:flex-end;gap:8px;font-size:14px}
+.pastille{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:var(--surface);
+  border:1px solid var(--trait);font-weight:600;white-space:nowrap}
+.pastille i{width:9px;height:9px;border-radius:50%;background:var(--doux)}
+.pastille.attente i{background:var(--soleil)}
+.pastille.encours i{background:var(--vert);animation:battement 1.4s infinite}
+.pastille.fini i{background:var(--vert)}
+.pastille.erreur{color:var(--rouge);border-color:var(--rouge)} .pastille.erreur i{background:var(--rouge)}
+.contexte{color:var(--doux)}
+@keyframes battement{50%{opacity:.35}}
+
+/* Bandeau de lancement */
+.lanceur{display:none;flex-wrap:wrap;gap:10px 14px;align-items:center;background:var(--surface);border:1px solid var(--trait);
+  border-radius:var(--rayon);padding:12px 14px;margin-bottom:18px}
+.lanceur.visible{display:flex}
+.lanceur label{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--doux)}
+.lanceur select{border:1px solid var(--trait);border-radius:10px;padding:8px 10px;background:var(--fond);color:var(--encre)}
+.lanceur input[type=range]{accent-color:var(--vert);width:110px}
+.bouton{margin-left:auto;border:0;border-radius:10px;padding:10px 18px;background:var(--vert);color:#fff;font-weight:700;cursor:pointer;
+  min-height:44px}
+.bouton:disabled{background:var(--doux);cursor:not-allowed}
+.lanceur .note{flex-basis:100%;font-size:13px;color:var(--doux);margin:0}
+
+/* Mesures */
+.mesures{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;background:var(--trait);border:1px solid var(--trait);
+  border-radius:var(--rayon);overflow:hidden;margin-bottom:18px}
+.mesure{background:var(--surface);padding:12px 14px;min-width:0}
+.mesure span{display:block;font-size:13px;color:var(--doux)}
+.mesure b{display:block;font:600 clamp(20px,2.6vw,28px)/1.2 var(--titre);font-variant-numeric:tabular-nums;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+
+/* Grille principale */
+.grille{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px}
+.carte{background:var(--surface);border:1px solid var(--trait);border-radius:var(--rayon);padding:16px;min-width:0}
+.carte h2{font:600 19px/1.3 var(--titre);margin:0 0 4px}
+.carte .aide{font-size:14px;color:var(--doux);margin:0 0 12px}
+
+/* Réseau */
+#reseau{width:100%;height:auto;display:block}
+.lien{stroke:var(--trait);stroke-width:2}
+.noeud rect{fill:var(--surface);stroke:var(--encre);stroke-width:1.5}
+.noeud.serveur rect{fill:var(--nuit);stroke:var(--nuit)}
+.noeud text{font:13px var(--texte);fill:var(--encre)}
+.noeud.serveur text{fill:var(--nuit-texte)}
+.noeud .titre-noeud{font-weight:700;font-size:14px}
+.noeud .etat-noeud{fill:var(--doux);font-size:12px}
+#reseau.compact .noeud text{font-size:10.5px}
+#reseau.compact .noeud .titre-noeud{font-size:11.5px}
+#reseau.compact .noeud.serveur .titre-noeud{font-size:13px}
+.noeud.actif rect{stroke:var(--vert);stroke-width:2.5}
+.noeud.vide rect{stroke-dasharray:4 4;stroke:var(--doux)}
+.paquet{filter:drop-shadow(0 0 3px rgba(0,0,0,.25))}
+.legende{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--doux);margin-top:8px}
+.legende i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+
+/* Ce que voit le serveur */
+.yeux{background:var(--nuit);color:var(--nuit-texte);border-color:var(--nuit)}
+.yeux h2{color:#fff}
+.yeux .aide{color:var(--nuit-doux)}
+.verdict{display:flex;gap:10px;align-items:flex-start;background:var(--nuit-2);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:14px}
+.verdict svg{flex:none;margin-top:2px}
+.verdict.danger{background:#3A1218;color:#FFD5DB}
+.vues{display:flex;flex-direction:column;gap:10px}
+.vue{border-top:1px solid #24453A;padding-top:10px}
+.vue:first-child{border-top:0;padding-top:0}
+.vue header{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--nuit-doux);margin-bottom:4px}
+.vue header b{color:#fff;font-weight:600}
+.octets{font:12.5px/1.55 var(--mono);color:var(--soleil);word-break:break-all;opacity:.92;max-height:4.7em;overflow:hidden}
+.octets.clair{color:#FF8A9A}
+.vue.vide .octets{color:var(--nuit-doux)}
+.empreinte{font:12px var(--mono);color:var(--nuit-doux);margin-top:12px}
+
+/* Courbe */
+.bas{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;margin-top:18px}
+#courbe{width:100%;height:auto;display:block}
+.axe{stroke:var(--trait);stroke-width:1}
+.graduation{font:12px var(--texte);fill:var(--doux)}
+.trace{fill:none;stroke:var(--vert);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.point{fill:var(--surface);stroke:var(--vert);stroke-width:2}
+.barre{fill:var(--soleil-pale);stroke:#C9A100;stroke-width:1}
+
+/* Journal */
+.journal{list-style:none;margin:0;padding:0;max-height:320px;overflow:auto;font-size:14px}
+.journal li{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:7px 0;border-top:1px solid var(--fond)}
+.journal li:first-child{border-top:0}
+.journal time{color:var(--doux);font:12px var(--mono);padding-top:2px}
+.journal li.alerte{color:var(--rouge)}
+.vide-texte{color:var(--doux);font-size:14px}
+.pied{margin-top:26px;font-size:13px;color:var(--doux);display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:space-between}
+
+@media (max-width:960px){
+  .grille,.bas{grid-template-columns:1fr}
+  .mesures{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .mesure:last-child{grid-column:span 2}
+}
+@media (max-width:560px){
+  .entete{grid-template-columns:1fr}
+  .statut{align-items:flex-start}
+  .mesures{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mesure:last-child{grid-column:1/-1}
+  .bouton{margin-left:0;width:100%}
+  .carte{padding:14px}
+}
+@media (prefers-reduced-motion:reduce){
+  .pastille.encours i{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="entete">
+    <div>
+      <div class="marque">
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2.5" fill="#00853F"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="#13302A" stroke-width="2"/><circle cx="12" cy="15.5" r="1.8" fill="#F2C200"/></svg>
+        Apprentissage fédéré chiffré pour les données médicales
+      </div>
+      <h1 id="titre">En attente des hôpitaux.<span class="seconde">Le serveur ne verra que des chiffres illisibles.</span></h1>
+    </div>
+    <div class="statut">
+      <span class="pastille attente" id="pastille"><i></i><span id="pastille-texte">En attente</span></span>
+      <span class="contexte" id="contexte">Aucun entraînement en cours</span>
+    </div>
+  </header>
+
+  <section class="lanceur" id="lanceur" aria-label="Lancer un entraînement">
+    <label>Jeu de données
+      <select id="choix-jeu">
+        <option value="pima">Pima (diabète)</option>
+        <option value="heart_uci">Heart UCI (cœur)</option>
+        <option value="ckd">CKD (rein)</option>
+      </select>
+    </label>
+    <label>Chiffrement
+      <select id="choix-schema">
+        <option value="bfv">BFV</option>
+        <option value="ckks">CKKS</option>
+        <option value="paillier">Paillier (lent)</option>
+        <option value="sans">Sans chiffrement</option>
+      </select>
+    </label>
+    <label>Pause entre rounds
+      <input type="range" id="choix-pause" min="0" max="4" step="0.5" value="1.5">
+      <output id="valeur-pause">1,5 s</output>
+    </label>
+    <button class="bouton" id="bouton-lancer" type="button">Lancer l'entraînement</button>
+    <p class="note" id="note-lancer">Le serveur et chaque hôpital démarrent comme des programmes séparés sur cet ordinateur.</p>
+  </section>
+
+  <section class="mesures" aria-label="Mesures du round en cours">
+    <div class="mesure"><span>Round</span><b id="m-round">–</b></div>
+    <div class="mesure"><span>Accuracy du modèle commun</span><b id="m-acc">–</b></div>
+    <div class="mesure"><span>Taille d'un message</span><b id="m-taille">–</b></div>
+    <div class="mesure"><span>Chiffrement par hôpital</span><b id="m-chiffr">–</b></div>
+    <div class="mesure"><span>Durée d'un round</span><b id="m-round-t">–</b></div>
+  </section>
+
+  <div class="grille">
+    <section class="carte">
+      <h2>Le réseau</h2>
+      <p class="aide" id="aide-reseau">Chaque hôpital garde ses données et n'envoie que des poids chiffrés.</p>
+      <svg id="reseau" viewBox="0 0 640 360" role="img" aria-label="Schéma du serveur et des hôpitaux"></svg>
+      <div class="legende">
+        <span><i style="background:var(--vert)"></i>Poids chiffrés envoyés au serveur</span>
+        <span><i style="background:var(--soleil)"></i>Somme chiffrée renvoyée aux hôpitaux</span>
+      </div>
+    </section>
+
+    <section class="carte yeux" aria-live="polite">
+      <h2>Ce que voit le serveur</h2>
+      <p class="aide">Les premiers octets de chaque message reçu, tels quels.</p>
+      <div class="verdict" id="verdict">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2.5" fill="#F2C200"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="#F2C200" stroke-width="2"/></svg>
+        <span id="verdict-texte">Le serveur n'a que la clé publique : il additionne les messages sans pouvoir les lire.</span>
+      </div>
+      <div class="vues" id="vues"><p class="vide-texte" style="color:var(--nuit-doux);margin:0">Aucun message reçu pour l'instant.</p></div>
+      <div class="empreinte" id="empreinte"></div>
+    </section>
+  </div>
+
+  <div class="bas">
+    <section class="carte">
+      <h2>Le modèle commun progresse</h2>
+      <p class="aide">Accuracy sur le jeu de test après chaque round (courbe) et durée du round (barres).</p>
+      <svg id="courbe" viewBox="0 0 640 260" role="img" aria-label="Accuracy par round"></svg>
+    </section>
+    <section class="carte">
+      <h2>Journal</h2>
+      <p class="aide">Les étapes du protocole, dans l'ordre où elles arrivent.</p>
+      <ol class="journal" id="journal" reversed><li class="vide-texte"><span></span>Lancez un entraînement pour voir les étapes.</li></ol>
+    </section>
+  </div>
+
+  <footer class="pied">
+    <span>Mémoire de Master 2 Génie Logiciel, Fatou FALL, Université Iba Der Thiam de Thiès</span>
+    <span id="adresses"></span>
+  </footer>
+</div>
+
+<script>
+"use strict";
+const NOMS_SCHEMA = {sans: "sans chiffrement", ckks: "CKKS", bfv: "BFV", paillier: "Paillier"};
+const NOMS_JEU = {pima: "Pima (diabète)", heart_uci: "Heart UCI (cœur)", ckd: "CKD (rein)"};
+const ETATS = {entraine: "entraîne", chiffre: "chiffre", envoie: "envoie", attend: "attend la somme",
+               dechiffre: "déchiffre", termine: "terminé"};
+const mouvementReduit = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = (id) => document.getElementById(id);
+const nf = (x, d = 1) => Number(x).toLocaleString("fr-FR", {minimumFractionDigits: d, maximumFractionDigits: d});
+const taille = (o) => o >= 1048576 ? nf(o / 1048576, 2) + " Mo" : nf(o / 1024, 0) + " Ko";
+const duree = (s) => s < 0.01 ? nf(s * 1000, 1) + " ms" : s < 10 ? nf(s, 2) + " s" : nf(s, 0) + " s";
+
+let etat;
+function remettreAZero() {
+  etat = {schema: null, jeu: null, nbRounds: 10, nTotal: 0, empreinte: "", hopitaux: {}, attendus: 0,
+          rounds: {}, roundCourant: 0, statut: "attente", vues: {}, termine: false};
+  $("journal").innerHTML = "";
+  dessinerReseau(); dessinerVues(); dessinerCourbe(); majMesures(); majTitre();
+}
+
+/* ---------- Titre et statut ---------- */
+function majTitre() {
+  const n = Object.keys(etat.hopitaux).length || etat.attendus;
+  const h1 = $("titre");
+  const premiere = n ? `${n === 1 ? "Un hôpital apprend" : nombreEnLettres(n) + " hôpitaux apprennent"} ensemble.` : "En attente des hôpitaux.";
+  let seconde = "Le serveur ne verra que des chiffres illisibles.";
+  h1.classList.toggle("danger", etat.schema === "sans");
+  if (etat.schema === "sans") seconde = "Sans chiffrement, le serveur lit leurs poids.";
+  else if (etat.schema) seconde = `Le serveur ne voit que du ${NOMS_SCHEMA[etat.schema]}.`;
+  h1.innerHTML = `${premiere}<span class="seconde">${seconde}</span>`;
+  const p = $("pastille");
+  p.className = "pastille " + etat.statut;
+  $("pastille-texte").textContent = {attente: "En attente", encours: `Round ${etat.roundCourant} sur ${etat.nbRounds}`,
+                                     fini: "Entraînement terminé", erreur: "Arrêt sur erreur"}[etat.statut];
+  $("contexte").textContent = etat.jeu ? `${NOMS_JEU[etat.jeu] || etat.jeu}, ${etat.nTotal} patients au total`
+                                       : (etat.schema ? `Chiffrement ${NOMS_SCHEMA[etat.schema]}` : "Aucun entraînement en cours");
+}
+function nombreEnLettres(n) {
+  return ({2: "Deux", 3: "Trois", 4: "Quatre", 5: "Cinq", 6: "Six"})[n] || String(n);
+}
+
+/* ---------- Schéma du réseau ---------- */
+const NS = "http://www.w3.org/2000/svg";
+const el = (nom, attrs = {}, parent) => { const e = document.createElementNS(NS, nom);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); if (parent) parent.appendChild(e); return e; };
+let positions = {}; let etatCompact = false;
+const ETATS_COURTS = {entraine: "entraîne", chiffre: "chiffre", envoie: "envoie", attend: "attend",
+                      dechiffre: "déchiffre", termine: "terminé"};
+const nomEtat = (e) => (etatCompact ? ETATS_COURTS : ETATS)[e] || e || "";
+function dessinerReseau() {
+  const svg = $("reseau"); svg.innerHTML = "";
+  const indices = Object.keys(etat.hopitaux).map(Number).sort((a, b) => a - b);
+  const total = Math.max(indices.length, etat.attendus || 0, 3);
+  const compact = svg.clientWidth > 0 && svg.clientWidth < 520;   // téléphone : schéma resserré
+  const W = compact ? 360 : 640, H = compact ? 320 : 360;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.classList.toggle("compact", compact);
+  etatCompact = compact;
+  const serveur = {x: W / 2, y: 62, demi: compact ? 100 : 115};
+  positions = {serveur};
+  const liste = [...Array(total).keys()];
+  const pas = (W - 16) / total;
+  const largeur = Math.min(compact ? pas - 8 : (total <= 3 ? 190 : 150), pas - 8);
+  const yH = H - 78;
+  liste.forEach((k, i) => {
+    const x = 8 + pas * (i + .5);
+    positions[k] = {x, y: yH, largeur};
+    el("line", {x1: x, y1: yH - 34, x2: serveur.x, y2: serveur.y + 34, class: "lien"}, svg);
+  });
+  const gS = el("g", {class: "noeud serveur"}, svg);
+  el("rect", {x: serveur.x - serveur.demi, y: serveur.y - 34, width: 2 * serveur.demi, height: 68, rx: 12}, gS);
+  el("text", {x: serveur.x, y: serveur.y - 6, "text-anchor": "middle", class: "titre-noeud"}, gS).textContent = "Serveur d'agrégation";
+  el("text", {x: serveur.x, y: serveur.y + 16, "text-anchor": "middle", class: "etat-noeud", fill: "#7FA392"}, gS)
+    .textContent = etat.schema && etat.schema !== "sans" ? "clé publique seulement" : (etat.schema === "sans" ? "reçoit les poids en clair" : "en attente");
+  liste.forEach((k) => {
+    const h = etat.hopitaux[k]; const p = positions[k];
+    const g = el("g", {class: "noeud" + (h ? (h.etat && h.etat !== "termine" && h.etat !== "attend" ? " actif" : "") : " vide"), id: "noeud-" + k}, svg);
+    el("rect", {x: p.x - p.largeur / 2, y: p.y - 34, width: p.largeur, height: 68, rx: 12}, g);
+    el("text", {x: p.x, y: p.y - 8, "text-anchor": "middle", class: "titre-noeud"}, g).textContent = h ? court(h.nom, p.largeur) : "Hôpital " + (k + 1);
+    el("text", {x: p.x, y: p.y + 12, "text-anchor": "middle", class: "etat-noeud"}, g)
+      .textContent = h ? `${h.n_k}${p.largeur > 110 ? " patients" : " pat."}${h.coordinateur && p.largeur > 150 ? ", coordinateur" : ""}` : (p.largeur > 120 ? "pas encore connecté" : "en attente");
+    el("text", {x: p.x, y: p.y + 27, "text-anchor": "middle", class: "etat-noeud", id: "etat-" + k}, g)
+      .textContent = h && h.etat ? nomEtat(h.etat) : "";
+  });
+}
+function court(t, largeur) { const max = Math.floor(largeur / 8.4); return t.length > max ? t.slice(0, max - 1) + "…" : t; }
+function majNoeud(k) {
+  const h = etat.hopitaux[k]; const g = $("noeud-" + k); if (!g || !h) return dessinerReseau();
+  g.classList.toggle("actif", !!h.etat && h.etat !== "termine" && h.etat !== "attend");
+  const t = $("etat-" + k); if (t) t.textContent = nomEtat(h.etat);
+}
+function paquet(k, montee) {
+  const a = positions[k], s = positions.serveur; if (!a || mouvementReduit) return;
+  const svg = $("reseau");
+  const c = el("circle", {r: 7, cx: 0, cy: 0, class: "paquet", fill: montee ? "#00853F" : "#F2C200"}, svg);
+  const de = montee ? {x: a.x, y: a.y - 34} : {x: s.x, y: s.y + 34};
+  const vers = montee ? {x: s.x, y: s.y + 34} : {x: a.x, y: a.y - 34};
+  const anim = c.animate([{transform: `translate(${de.x}px,${de.y}px)`, opacity: 0},
+                          {opacity: 1, offset: .15},
+                          {transform: `translate(${vers.x}px,${vers.y}px)`, opacity: 1}],
+                         {duration: 900, easing: "cubic-bezier(.4,0,.2,1)"});
+  anim.onfinish = () => c.remove();
+}
+
+/* ---------- Ce que voit le serveur ---------- */
+function dessinerVues() {
+  const zone = $("vues");
+  const indices = Object.keys(etat.vues).map(Number).sort((a, b) => a - b);
+  const danger = etat.schema === "sans";
+  $("verdict").classList.toggle("danger", danger);
+  $("verdict-texte").textContent = danger
+    ? "Sans chiffrement, le serveur lit directement les poids de chaque hôpital : ils peuvent trahir des patients."
+    : "Le serveur n'a que la clé publique : il additionne les messages sans pouvoir les lire.";
+  $("empreinte").textContent = etat.empreinte && !danger ? `Empreinte de la clé publique : ${etat.empreinte}` : "";
+  $("aide-reseau").textContent = danger ? "Chaque hôpital garde ses données, mais envoie ses poids en clair."
+                                        : "Chaque hôpital garde ses données et n'envoie que des poids chiffrés.";
+  $("verdict").querySelector("path").setAttribute("d", danger ? "M8 10V7a4 4 0 0 1 7.5-2" : "M8 10V7a4 4 0 0 1 8 0v3");
+  document.querySelector(".legende").innerHTML = danger
+    ? '<span><i style="background:var(--vert)"></i>Poids en clair envoyés au serveur</span><span><i style="background:var(--soleil)"></i>Somme renvoyée aux hôpitaux</span>'
+    : '<span><i style="background:var(--vert)"></i>Poids chiffrés envoyés au serveur</span><span><i style="background:var(--soleil)"></i>Somme chiffrée renvoyée aux hôpitaux</span>';
+  if (!indices.length) { zone.innerHTML = '<p class="vide-texte" style="color:var(--nuit-doux);margin:0">Aucun message reçu pour l\'instant.</p>'; return; }
+  zone.innerHTML = "";
+  for (const k of indices) {
+    const v = etat.vues[k];
+    const bloc = document.createElement("div"); bloc.className = "vue";
+    const tete = document.createElement("header");
+    tete.innerHTML = `<b></b><span></span>`;
+    tete.querySelector("b").textContent = v.nom;
+    tete.querySelector("span").textContent = `round ${v.round}, ${taille(v.octets)}${v.nb_blocs > 1 ? `, ${v.nb_blocs} blocs` : ""}`;
+    const o = document.createElement("div");
+    if (v.clair) { o.className = "octets clair"; o.textContent = "poids lus : " + v.clair.map((x) => nf(x, 4)).join("   ") + "  …"; }
+    else { o.className = "octets"; o.textContent = (v.hex || "").replace(/(.{4})/g, "$1 ").trim() + " …"; }
+    bloc.append(tete, o); zone.appendChild(bloc);
+  }
+}
+
+/* ---------- Mesures ---------- */
+function majMesures() {
+  const r = etat.rounds[etat.roundCourant] || {};
+  const dernierAcc = [...Object.values(etat.rounds)].filter((x) => x.accuracy != null).pop();
+  $("m-round").textContent = etat.roundCourant ? `${etat.roundCourant} / ${etat.nbRounds}` : "–";
+  $("m-acc").textContent = dernierAcc ? nf(dernierAcc.accuracy * 100, 1) + " %" : "–";
+  $("m-taille").textContent = r.octets ? taille(r.octets) : "–";
+  const avecChif = [...Object.values(etat.rounds)].filter((x) => x.chiffrement).pop();
+  const chif = avecChif ? Object.values(avecChif.chiffrement) : [];
+  $("m-chiffr").textContent = chif.length ? duree(chif.reduce((a, b) => a + b, 0) / chif.length) : "–";
+  const avecDuree = [...Object.values(etat.rounds)].filter((x) => x.t_round != null).pop();
+  $("m-round-t").textContent = avecDuree ? duree(avecDuree.t_round) : "–";
+}
+
+/* ---------- Courbe ---------- */
+function dessinerCourbe() {
+  const svg = $("courbe"); svg.innerHTML = "";
+  const compact = svg.clientWidth > 0 && svg.clientWidth < 520;
+  const W = compact ? 360 : 640;
+  svg.setAttribute("viewBox", `0 0 ${W} 260`);
+  const g = {x0: 48, x1: W - 16, y0: 222, y1: 16};
+  const n = etat.nbRounds || 10;
+  const pts = Object.entries(etat.rounds).filter(([, v]) => v.accuracy != null).map(([r, v]) => [+r, v.accuracy]).sort((a, b) => a[0] - b[0]);
+  const vals = pts.map((p) => p[1]);
+  let bas = vals.length ? Math.max(0, Math.floor((Math.min(...vals) - .05) * 20) / 20) : .5;
+  let haut = vals.length ? Math.min(1, Math.ceil((Math.max(...vals) + .03) * 20) / 20) : 1;
+  if (haut - bas < .1) bas = Math.max(0, haut - .1);
+  const X = (r) => g.x0 + (r - 1) / Math.max(n - 1, 1) * (g.x1 - g.x0);
+  const Y = (v) => g.y0 - (v - bas) / (haut - bas) * (g.y0 - g.y1);
+  // barres de durée
+  const durees = Object.entries(etat.rounds).filter(([, v]) => v.t_round != null);
+  const dmax = Math.max(...durees.map(([, v]) => v.t_round), 0.001);
+  for (const [r, v] of durees) {
+    const h = v.t_round / dmax * 60;
+    el("rect", {x: X(+r) - (compact ? 6 : 9), y: g.y0 - h, width: compact ? 12 : 18, height: h, rx: 3, class: "barre"}, svg);
+  }
+  for (let i = 0; i <= 4; i++) {
+    const v = bas + i * (haut - bas) / 4;
+    el("line", {x1: g.x0, x2: g.x1, y1: Y(v), y2: Y(v), class: "axe"}, svg);
+    el("text", {x: g.x0 - 8, y: Y(v) + 4, "text-anchor": "end", class: "graduation"}, svg).textContent = nf(v * 100, 0) + " %";
+  }
+  for (let r = 1; r <= n; r++) el("text", {x: X(r), y: g.y0 + 22, "text-anchor": "middle", class: "graduation"}, svg).textContent = r;
+  if (durees.length) el("text", {x: g.x1, y: g.y0 - 66, "text-anchor": "end", class: "graduation"}, svg).textContent = `barre la plus haute : ${duree(dmax)}`;
+  if (pts.length) {
+    el("polyline", {points: pts.map(([r, v]) => `${X(r)},${Y(v)}`).join(" "), class: "trace"}, svg);
+    for (const [r, v] of pts) {
+      const c = el("circle", {cx: X(r), cy: Y(v), r: 5, class: "point"}, svg);
+      el("title", {}, c).textContent = `Round ${r} : ${nf(v * 100, 1)} %`;
+    }
+  } else {
+    el("text", {x: (g.x0 + g.x1) / 2, y: (g.y0 + g.y1) / 2, "text-anchor": "middle", class: "graduation"}, svg)
+      .textContent = "La courbe apparaîtra au premier round.";
+  }
+}
+
+/* ---------- Journal ---------- */
+function noter(texte, alerte = false, heure = Date.now() / 1000) {
+  const j = $("journal");
+  const li = document.createElement("li"); if (alerte) li.className = "alerte";
+  const t = document.createElement("time");
+  t.textContent = new Date(heure * 1000).toLocaleTimeString("fr-FR");
+  const s = document.createElement("span"); s.textContent = texte;
+  li.append(t, s); j.prepend(li);
+  while (j.children.length > 120) j.lastChild.remove();
+}
+
+/* ---------- Événements ---------- */
+function traiter(e) {
+  switch (e.type) {
+    case "serveur_demarre":
+      remettreAZero(); etat.schema = e.schema; etat.attendus = e.nb_hopitaux;
+      dessinerReseau(); majTitre(); dessinerVues();
+      noter(`Serveur ${NOMS_SCHEMA[e.schema]} démarré, en attente de ${e.nb_hopitaux} hôpitaux.`, false, e.heure); break;
+    case "hopital_connecte":
+      etat.hopitaux[e.indice] = {nom: e.nom, n_k: e.n_k, coordinateur: e.coordinateur, etat: ""};
+      dessinerReseau(); majTitre();
+      noter(`${e.nom} connecté (${e.n_k} patients)${e.coordinateur ? ", il a envoyé la clé publique" : ""}.`, false, e.heure); break;
+    case "demarrer":
+      etat.jeu = e.jeu; etat.nbRounds = e.nb_rounds; etat.nTotal = e.n_total; etat.empreinte = e.empreinte;
+      etat.statut = "encours"; etat.roundCourant = 1;
+      majTitre(); dessinerVues(); dessinerCourbe(); majMesures();
+      noter(`Tous les hôpitaux sont là. Début de l'entraînement : ${e.nb_rounds} rounds.`, false, e.heure); break;
+    case "etat":
+      if (!etat.hopitaux[e.indice]) etat.hopitaux[e.indice] = {nom: e.nom, n_k: "?", etat: ""};
+      etat.hopitaux[e.indice].etat = e.etat;
+      if (e.round && e.round > etat.roundCourant && e.etat !== "termine") { etat.roundCourant = e.round; majTitre(); majMesures(); }
+      if (e.etat === "envoie") paquet(e.indice, true);
+      majNoeud(e.indice); break;
+    case "poids_recu": {
+      etat.vues[e.indice] = e;
+      const r = etat.rounds[e.round] = etat.rounds[e.round] || {};
+      r.octets = e.octets;
+      dessinerVues(); majMesures();
+      noter(`Le serveur reçoit ${taille(e.octets)} de ${e.nom}${e.clair ? ", en clair" : ", chiffrés"}.`, !!e.clair, e.heure); break; }
+    case "agregation":
+      noter(`Round ${e.round} : addition des messages ${etat.schema === "sans" ? "en clair" : "sans déchiffrer"} en ${duree(e.t_agregation)}.`, false, e.heure); break;
+    case "somme_envoyee":
+      Object.keys(etat.hopitaux).forEach((k) => paquet(+k, false));
+      noter(`Round ${e.round} : somme ${etat.schema === "sans" ? "" : "chiffrée "}renvoyée à tous les hôpitaux.`, false, e.heure); break;
+    case "round_hopital": {
+      const r = etat.rounds[e.round] = etat.rounds[e.round] || {};
+      r.chiffrement = r.chiffrement || {}; r.chiffrement[e.indice] = e.t_chiffrement;
+      if (e.accuracy != null) {
+        r.accuracy = e.accuracy; r.t_round = e.t_round;
+        noter(`Round ${e.round} terminé : accuracy du modèle commun ${nf(e.accuracy * 100, 1)} %.`, false, e.heure);
+      }
+      majMesures(); dessinerCourbe(); break; }
+    case "fin":
+      etat.statut = "fini"; Object.values(etat.hopitaux).forEach((h) => h.etat = "termine");
+      dessinerReseau(); majTitre();
+      noter(`Entraînement terminé. Mémoire vive du serveur : ${nf(e.ram_serveur_mo, 0)} Mo.`, false, e.heure); finLancement(); break;
+    case "ram":
+      noter(`${(etat.hopitaux[e.indice] || {}).nom || "Hôpital"} : mémoire vive maximale ${nf(e.ram_mo, 0)} Mo.`, false, e.heure); break;
+    case "erreur":
+      etat.statut = "erreur"; majTitre(); noter(e.message || "Erreur.", true, e.heure); finLancement(); break;
+  }
+}
+
+/* ---------- Connexion au flux ---------- */
+function connecter() {
+  const flux = new EventSource("flux");
+  flux.onmessage = (m) => { try { traiter(JSON.parse(m.data)); } catch (err) { console.error(err); } };
+  flux.onerror = () => { $("contexte").textContent = "Connexion au tableau de bord perdue, nouvelle tentative…"; };
+}
+
+/* ---------- Lancement depuis la page ---------- */
+function finLancement() { $("bouton-lancer").disabled = false; $("bouton-lancer").textContent = "Lancer l'entraînement"; }
+async function chargerConfig() {
+  try {
+    const c = await (await fetch("config")).json();
+    if (c.lancement) $("lanceur").classList.add("visible");
+    if (c.en_cours) { $("bouton-lancer").disabled = true; $("bouton-lancer").textContent = "Entraînement en cours"; }
+    if (c.adresses && c.adresses.length) $("adresses").textContent = `Sur téléphone ou tablette (même Wi-Fi) : ${c.adresses[0]}`;
+  } catch (err) { /* page ouverte hors du tableau de bord */ }
+}
+$("choix-pause").addEventListener("input", (ev) => $("valeur-pause").textContent = nf(ev.target.value, 1) + " s");
+$("choix-schema").addEventListener("change", (ev) => {
+  $("note-lancer").textContent = ev.target.value === "paillier"
+    ? "Paillier chiffre les poids un par un : comptez environ une minute par round."
+    : "Le serveur et chaque hôpital démarrent comme des programmes séparés sur cet ordinateur.";
+});
+$("bouton-lancer").addEventListener("click", async () => {
+  const b = $("bouton-lancer"); b.disabled = true; b.textContent = "Démarrage…";
+  const q = new URLSearchParams({jeu: $("choix-jeu").value, schema: $("choix-schema").value, pause: $("choix-pause").value});
+  try {
+    const r = await fetch("lancer?" + q, {method: "POST"});
+    const d = await r.json();
+    if (!r.ok) { noter(d.erreur || "Lancement impossible.", true); finLancement(); }
+    else b.textContent = "Entraînement en cours";
+  } catch (err) { noter("Le tableau de bord ne répond pas. Vérifiez qu'il est lancé.", true); finLancement(); }
+});
+
+let minuterie;
+window.addEventListener("resize", () => { clearTimeout(minuterie); minuterie = setTimeout(() => { dessinerReseau(); dessinerCourbe(); }, 150); });
+remettreAZero();
+chargerConfig();
+connecter();
+</script>
+</body>
+</html>

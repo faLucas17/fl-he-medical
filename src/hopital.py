@@ -32,6 +32,7 @@ import pandas as pd
 import torch
 
 from src.donnees import charger
+from src.evenements import Diffuseur
 from src.federe import EPOQUES_LOCALES, NB_ROUNDS, tous_les_schemas
 from src.mesure import PicMemoire
 from src.modele import ReseauTabulaire, ecrire_poids, entrainer_localement, evaluer, lire_poids
@@ -64,7 +65,9 @@ def main():
     parser.add_argument("--rounds", type=int, default=NB_ROUNDS)
     parser.add_argument("--cles", default=str(RACINE / "cles"), help="dossier des clés")
     parser.add_argument("--graine", type=int, default=42)
+    parser.add_argument("--tableau", default=None, help="adresse du tableau de bord, ex. http://127.0.0.1:8080")
     args = parser.parse_args()
+    diffuseur = Diffuseur(args.tableau, f"hopital{args.indice}")
 
     donnees = charger(args.jeu)
     X, y = donnees.X_hopitaux[args.indice], donnees.y_hopitaux[args.indice]
@@ -100,6 +103,7 @@ def main():
     modele_global = ReseauTabulaire(X.shape[1])
     poids_global = lire_poids(modele_global)
     nb_poids = len(poids_global)
+    etat = lambda e, r: diffuseur.envoyer("etat", indice=args.indice, nom=nom, etat=e, round=r)
 
 
     historique = []
@@ -108,21 +112,31 @@ def main():
             debut_round = time.perf_counter()
             modele_local = ReseauTabulaire(X.shape[1])
             ecrire_poids(modele_local, poids_global)
+            etat("entraine", numero)
             debut = time.perf_counter()
             entrainer_localement(modele_local, X, y, epoques=EPOQUES_LOCALES,
                                  graine=args.graine + 1000 * numero + args.indice)
             t_entrainement = time.perf_counter() - debut
 
+            etat("chiffre", numero)
             debut = time.perf_counter()
             message = schema.chiffrer(lire_poids(modele_local) * n_k)          # formule (3.1)
             t_chiffrement = time.perf_counter() - debut
 
+            etat("envoie", numero)
             octets, t_envoi = envoyer(sock, {"type": "POIDS", "round": numero}, schema.vers_octets(message))
+            etat("attend", numero)
 
             debut = time.perf_counter()
             entete, blocs, octets_recus, t_reception = recevoir(sock)
             t_attente = time.perf_counter() - debut
+            if entete["type"] == "FIN":  # le serveur a arrêté l'entraînement (un hôpital ne répond plus)
+                print("ARRÊT demandé par le serveur :", entete.get("erreur", ""), flush=True)
+                diffuseur.envoyer("erreur", indice=args.indice, message=entete.get("erreur", ""))
+                diffuseur.vider()
+                raise SystemExit(2)
             assert entete["type"] == "SOMME" and entete["round"] == numero, entete
+            etat("dechiffre", numero)
 
             debut = time.perf_counter()
             poids_global = schema.dechiffrer(schema.depuis_octets(blocs), nb_poids) / n_total  # (3.3)
@@ -137,6 +151,9 @@ def main():
             if coordinateur:  # le coordinateur évalue le modèle global sur le jeu de test commun
                 ligne.update(evaluer(modele_global, donnees.X_test, donnees.y_test))
             historique.append(ligne)
+            diffuseur.envoyer("round_hopital", indice=args.indice, nom=nom, round=numero, octets=octets,
+                              **{k: v for k, v in ligne.items() if k.startswith("t_")},
+                              **({k: ligne[k] for k in ("accuracy", "f1", "auc")} if coordinateur else {}))
             print(f"  round {numero}/{args.rounds} : chiffrement {t_chiffrement:.3f} s | "
                   f"envoi {octets / 1024:.0f} Ko | round {ligne['t_round']:.2f} s"
                   + (f" | accuracy {ligne['accuracy']:.3f}" if coordinateur else ""), flush=True)
@@ -144,6 +161,7 @@ def main():
     entete, _, _, _ = recevoir(sock)
     assert entete["type"] == "FIN", entete
     sock.close()
+    etat("termine", args.rounds)
 
     DOSSIER.mkdir(parents=True, exist_ok=True)
     df = pd.DataFrame(historique)
@@ -152,6 +170,8 @@ def main():
     fichier = DOSSIER / f"{args.jeu}_{args.schema}_hopital{args.indice}.csv"
     df.to_csv(fichier, index=False)
     print(f"Terminé. RAM maximale : {memoire.pic_mo:.0f} Mo. Mesures : {fichier}", flush=True)
+    diffuseur.envoyer("ram", indice=args.indice, ram_mo=memoire.pic_mo)
+    diffuseur.vider()
 
 
 if __name__ == "__main__":

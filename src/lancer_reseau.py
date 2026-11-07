@@ -32,7 +32,7 @@ JEUX = ["pima", "heart_uci", "ckd"]
 SCHEMAS = ["sans", "ckks", "bfv", "paillier"]
 
 
-def lancer(jeu, schema, port, rounds):
+def lancer(jeu, schema, port, rounds, tableau=None, pause=0.0):
     nb_hopitaux = len(charger(jeu).y_hopitaux)
     journaux = DOSSIER / "journaux"
     journaux.mkdir(parents=True, exist_ok=True)
@@ -42,7 +42,8 @@ def lancer(jeu, schema, port, rounds):
     debut = time.perf_counter()
     with open(journaux / f"{jeu}_{schema}_serveur.txt", "w", encoding="utf-8") as j:
         serveur = subprocess.Popen(python + ["src.serveur", "--schema", schema, "--hopitaux",
-                                             str(nb_hopitaux), "--port", str(port)],
+                                             str(nb_hopitaux), "--port", str(port), "--pause", str(pause)]
+                                   + (["--tableau", tableau] if tableau else []),
                                    cwd=RACINE, env=env, stdout=j, stderr=subprocess.STDOUT)
     time.sleep(2)
     hopitaux = []
@@ -50,7 +51,8 @@ def lancer(jeu, schema, port, rounds):
         j = open(journaux / f"{jeu}_{schema}_hopital{k}.txt", "w", encoding="utf-8")
         hopitaux.append((subprocess.Popen(python + ["src.hopital", "--jeu", jeu, "--schema", schema,
                                                     "--indice", str(k), "--serveur", f"127.0.0.1:{port}",
-                                                    "--rounds", str(rounds)],
+                                                    "--rounds", str(rounds)]
+                                          + (["--tableau", tableau] if tableau else []),
                                           cwd=RACINE, env=env, stdout=j, stderr=subprocess.STDOUT), j))
     codes = [p.wait() for p, _ in hopitaux] + [serveur.wait()]
     for _, j in hopitaux:
@@ -112,12 +114,14 @@ def main():
     parser.add_argument("--rounds", type=int, default=10)
     parser.add_argument("--port", type=int, default=PORT_DEFAUT)
     parser.add_argument("--resume", action="store_true", help="recalcule seulement le tableau final")
+    parser.add_argument("--tableau", default=None, help="adresse du tableau de bord, ex. http://127.0.0.1:8080")
+    parser.add_argument("--pause", type=float, default=0.0, help="pause (s) entre deux rounds, pour une démonstration")
     args = parser.parse_args()
     jeux, schemas = (JEUX, SCHEMAS) if args.tous else (args.jeu, args.schema)
     if not args.resume:
         for jeu in jeux:
             for schema in schemas:
-                lancer(jeu, schema, args.port, args.rounds)
+                lancer(jeu, schema, args.port, args.rounds, args.tableau, args.pause)
     resumer()
 
 

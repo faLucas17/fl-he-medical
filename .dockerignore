@@ -1,0 +1,13 @@
+.git
+.venv
+__pycache__
+*.pyc
+data
+cles
+results
+journaux
+figures
+figures_rapport
+*.pdf
+*.pptx
+*.docx

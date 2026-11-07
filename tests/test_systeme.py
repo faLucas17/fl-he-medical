@@ -112,9 +112,35 @@ def test_transport_reseau():
     verifier(octets == octets_recus, f"même nombre d'octets des deux côtés ({octets})")
 
 
+def test_tableau_de_bord():
+    print("\n5. Tableau de bord : les événements arrivent à la page")
+    import json
+    import urllib.request
+    from http.server import ThreadingHTTPServer
+    from src.evenements import Diffuseur
+    from src.tableau_de_bord import Etat, creer_gestionnaire
+    etat = Etat()
+    serveur = ThreadingHTTPServer(("127.0.0.1", 0), creer_gestionnaire(etat, 0, False))
+    port = serveur.server_address[1]
+    threading.Thread(target=serveur.serve_forever, daemon=True).start()
+    diffuseur = Diffuseur(f"http://127.0.0.1:{port}", "test")
+    diffuseur.envoyer("serveur_demarre", schema="bfv", nb_hopitaux=3)
+    diffuseur.envoyer("hopital_connecte", indice=0, nom="Hôpital 1", n_k=205)
+    diffuseur.vider()
+    file = etat.abonner()
+    recus = [file.get(timeout=2)["type"] for _ in range(2)]
+    verifier(recus == ["serveur_demarre", "hopital_connecte"], "les événements sont reçus dans l'ordre")
+    ouvreur = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    page = ouvreur.open(f"http://127.0.0.1:{port}/", timeout=3).read().decode("utf-8")
+    config = json.loads(ouvreur.open(f"http://127.0.0.1:{port}/config", timeout=3).read())
+    verifier("Ce que voit le serveur" in page and config["lancement"] is False, "la page et la configuration sont servies")
+    serveur.shutdown()
+
+
 if __name__ == "__main__":
     test_agregation_et_cles()
     test_serveur_sans_cle_secrete()
     test_copie_des_poids()
     test_transport_reseau()
+    test_tableau_de_bord()
     print(f"\nTous les tests sont réussis ({reussis} vérifications).")

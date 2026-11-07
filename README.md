@@ -58,6 +58,36 @@ python -m src.hopital --jeu pima --schema bfv --indice 2 --serveur IP:5050
 Le dossier `cles/` contient la clé secrète : il n'est jamais publié (voir `.gitignore`)
 et ne doit jamais être copié sur la machine du serveur.
 
+## Tableau de bord en direct
+
+```
+python -m src.tableau_de_bord
+```
+
+Ouvrir http://127.0.0.1:8080, choisir le jeu de données et le schéma, puis cliquer sur
+« Lancer l'entraînement ». La page montre les hôpitaux connectés, les messages chiffrés
+qui circulent, ce que voit le serveur (des octets illisibles, ou les poids en clair sans
+chiffrement) et l'accuracy à chaque round. Depuis un téléphone ou une tablette du même
+Wi-Fi, ouvrir l'adresse affichée dans le terminal.
+
+## Docker : un conteneur par participant
+
+Avec Docker Desktop installé :
+
+```
+docker compose up --build
+```
+
+Puis ouvrir http://localhost:8080. Le tableau de bord, le serveur et chaque hôpital
+tournent dans des conteneurs séparés, reliés par un réseau virtuel. Seuls les hôpitaux
+ont accès aux données et au volume des clés ; le serveur n'a ni l'un ni l'autre.
+
+```
+SCHEMA=ckks docker compose up                              # un autre schéma
+JEU=heart_uci NB_HOPITAUX=4 docker compose --profile heart up
+docker compose down                                         # tout arrêter
+```
+
 ## Résultats
 
 Les mesures sont écrites dans `results/` (simulation), `results/repetitions/` et `results/reseau/`.

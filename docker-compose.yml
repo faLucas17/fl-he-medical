@@ -1,0 +1,71 @@
+# Le système complet, avec un conteneur par participant :
+# chaque conteneur est comme un ordinateur séparé, relié aux autres par un réseau virtuel.
+#
+#   docker compose up --build                       Pima, BFV, 3 hôpitaux
+#   SCHEMA=ckks docker compose up                   un autre schéma
+#   JEU=heart_uci NB_HOPITAUX=4 docker compose --profile heart up
+#
+# Puis ouvrir http://localhost:8080 (ou http://<IP de l'ordinateur>:8080 sur un téléphone).
+#
+# Sécurité : seuls les hôpitaux montent le volume « cles » (clé secrète) et le
+# dossier des données. Le serveur n'a accès à aucun des deux.
+
+name: fl-he-medical
+
+x-image: &image
+  build: .
+  image: fl-he-medical:latest
+
+x-hopital: &hopital
+  <<: *image
+  volumes:
+    - ./data:/app/data:ro
+    - ./results:/app/results
+    - cles:/cles
+  depends_on:
+    - serveur
+
+services:
+  tableau:
+    <<: *image
+    command: ["python", "-m", "src.tableau_de_bord", "--port", "8080", "--sans-lancement"]
+    ports:
+      - "8080:8080"
+
+  serveur:
+    <<: *image
+    command: >
+      python -m src.serveur --schema ${SCHEMA:-bfv} --hopitaux ${NB_HOPITAUX:-3}
+      --pause ${PAUSE:-1.5} --tableau http://tableau:8080
+    volumes:
+      - ./results:/app/results
+    depends_on:
+      - tableau
+
+  hopital0:
+    <<: *hopital
+    command: >
+      python -m src.hopital --jeu ${JEU:-pima} --schema ${SCHEMA:-bfv} --indice 0
+      --serveur serveur:5050 --cles /cles --tableau http://tableau:8080
+
+  hopital1:
+    <<: *hopital
+    command: >
+      python -m src.hopital --jeu ${JEU:-pima} --schema ${SCHEMA:-bfv} --indice 1
+      --serveur serveur:5050 --cles /cles --tableau http://tableau:8080
+
+  hopital2:
+    <<: *hopital
+    command: >
+      python -m src.hopital --jeu ${JEU:-pima} --schema ${SCHEMA:-bfv} --indice 2
+      --serveur serveur:5050 --cles /cles --tableau http://tableau:8080
+
+  hopital3:
+    <<: *hopital
+    profiles: ["heart"]   # seulement pour Heart UCI, qui a 4 hôpitaux
+    command: >
+      python -m src.hopital --jeu ${JEU:-heart_uci} --schema ${SCHEMA:-bfv} --indice 3
+      --serveur serveur:5050 --cles /cles --tableau http://tableau:8080
+
+volumes:
+  cles:
